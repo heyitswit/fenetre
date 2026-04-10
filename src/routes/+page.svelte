@@ -1,199 +1,391 @@
 <script lang="ts">
-	import * as m from "$lib/paraglide/messages";
-	import { Button } from "$lib/components/ui/button/index.js";
-	import { 
-		Shield, 
-		Database, 
-		Languages, 
-		ArrowRight, 
-		Github, 
-		CreditCard, 
-		Mail, 
-		Sparkles,
+	import LanguageSelector from '$lib/components/language-selector.svelte';
+	import ThemeToggle from '$lib/components/theme-toggle.svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import { BlurFade } from '$lib/components/magic/blur-fade';
+	import { TypingAnimation } from '$lib/components/magic/typing-animation';
+	import { MorphingText } from '$lib/components/magic/morphing-text';
+	import * as m from '$lib/paraglide/messages';
+	import { getAllUsernames } from '$lib/remote/users.remote';
+	import {
+		ArrowRight,
+		Calendar,
+		Check,
+		FileText,
+		Github,
+		Mail,
+		Mouse,
+		TrendingUp,
+		Users,
 		Zap
-	} from "@lucide/svelte";
+	} from '@lucide/svelte';
+
+	let { data } = $props();
+
+	const users = $derived(await getAllUsernames());
+
+	const sources = ['Malt', 'LinkedIn', 'Portfolio', 'clients'];
+
+	const features = $derived([
+		{
+			icon: Calendar,
+			title: m['landing.features.calendar.title'](),
+			desc: m['landing.features.calendar.desc']()
+		},
+		{
+			icon: FileText,
+			title: m['landing.features.brief.title'](),
+			desc: m['landing.features.brief.desc']()
+		},
+		{
+			icon: Zap,
+			title: m['landing.features.busy.title'](),
+			desc: m['landing.features.busy.desc']()
+		},
+		{
+			icon: Mail,
+			title: m['landing.features.email.title'](),
+			desc: m['landing.features.email.desc']()
+		},
+		{
+			icon: TrendingUp,
+			title: m['landing.features.insights.title'](),
+			desc: m['landing.features.insights.desc']()
+		},
+		{
+			icon: Users,
+			title: m['landing.features.multi.title'](),
+			desc: m['landing.features.multi.desc']()
+		}
+	]);
+
+	const steps = $derived([
+		{ n: '01', title: m['landing.flow.step1.title'](), desc: m['landing.flow.step1.desc']() },
+		{ n: '02', title: m['landing.flow.step2.title'](), desc: m['landing.flow.step2.desc']() },
+		{ n: '03', title: m['landing.flow.step3.title'](), desc: m['landing.flow.step3.desc']() }
+	]);
 </script>
 
-<div class="flex min-h-screen flex-col bg-background font-sans">
-	<!-- Navigation -->
-	<header class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-		<div class="container mx-auto flex h-14 items-center justify-between px-4 sm:px-8">
-			<div class="flex items-center gap-2 font-bold text-lg tracking-tight">
-				<div class="size-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-md shadow-primary/20">
-					<Sparkles class="size-4 fill-current" />
-				</div>
-				<span class="bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-					Zenith
-				</span>
-			</div>
-			<nav class="flex items-center gap-2 sm:gap-4">
-				<Button variant="ghost" href="/login" size="sm" class="hidden sm:inline-flex font-medium">Login</Button>
-				<Button href="/login" size="sm" class="rounded-full px-4 shadow-sm shadow-primary/10">
-					{m["homepage.get_started"]()}
+<header
+	class="fixed top-0 right-0 left-0 z-50 flex items-center justify-between border-b border-border/60 bg-background/80 px-6 py-3 backdrop-blur-sm"
+>
+	<a href="/" class="flex items-center gap-2">
+		<img src="/image.png" alt="Fenêtre" class="size-6 rounded-full" />
+		<span class="text-sm font-semibold tracking-tight">Fenêtre</span>
+	</a>
+	<div class="flex items-center gap-1.5">
+		<LanguageSelector />
+		<ThemeToggle size="icon-sm" />
+		<Button
+			href="https://github.com/your-username/fenetre"
+			variant="ghost"
+			size="sm"
+			target="_blank"
+			rel="noopener noreferrer"
+		>
+			<Github />
+			<span class="hidden sm:inline">GitHub</span>
+		</Button>
+		<Button href={data.user ? '/admin' : '/login'} variant="outline" size="sm">
+			{data.user ? data.user.name : m['home.landing.login']()}
+		</Button>
+	</div>
+</header>
+
+<section
+	class="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 pt-16 pb-24 text-center"
+>
+	<div class="orb orb-1" aria-hidden="true"></div>
+	<div class="orb orb-2" aria-hidden="true"></div>
+
+	<span
+		class="badge mb-6 inline-flex animate-in items-center rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground delay-[50ms] fill-mode-forwards fade-in slide-in-from-bottom-4"
+	>
+		{m['landing.badge']()}
+	</span>
+
+	<h1
+		class="mb-1 max-w-2xl animate-in text-4xl leading-tight delay-200 fill-mode-forwards fade-in slide-in-from-bottom-4 sm:text-5xl lg:text-6xl"
+	>
+		{m['landing.hero.headline']()}
+	</h1>
+	<MorphingText
+		texts={sources}
+		class="mb-5 h-12 max-w-2xl text-4xl font-serif font-semibold tracking-[-0.02em] text-primary sm:h-14 sm:text-5xl lg:h-16 lg:text-6xl"
+	/>
+
+	<p
+		class="mb-10 max-w-sm animate-in text-lg leading-relaxed text-muted-foreground delay-[350ms] fill-mode-forwards fade-in slide-in-from-bottom-4"
+	>
+		{m['landing.hero.description']()}
+	</p>
+
+	<div
+		class="flex animate-in flex-wrap items-center justify-center gap-3 delay-500 fill-mode-forwards fade-in slide-in-from-bottom-4"
+	>
+		{#if users.length === 0}
+			<Button href="/setup" size="lg">
+				{m['home.landing.setup']()}
+				<ArrowRight />
+			</Button>
+		{:else if users.length === 1}
+			<Button href="/{users[0].username}" size="lg">
+				{m['landing.cta.book_with']({ name: users[0].name })}
+				<ArrowRight />
+			</Button>
+		{:else}
+			<Button href="/directory" size="lg">
+				{m['landing.cta.see_freelancers']()}
+				<ArrowRight />
+			</Button>
+		{/if}
+		<Button href={data.user ? '/admin' : '/login'} variant="outline" size="lg">
+			{data.user ? data.user.name : m['home.landing.login']()}
+		</Button>
+	</div>
+
+	<div
+		class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-in delay-[1100ms] fill-mode-forwards fade-in slide-in-from-bottom-4"
+		aria-hidden="true"
+	>
+		<Mouse size={20} class="animate-pulse text-muted-foreground/50" />
+	</div>
+</section>
+
+<section class="px-6 py-24">
+	<div class="mx-auto max-w-5xl">
+		<BlurFade direction="up" class="mb-14 text-center">
+			<h2 class="mb-3 text-3xl sm:text-4xl">{m['landing.features.title']()}</h2>
+			<p class="text-muted-foreground">{m['landing.features.subtitle']()}</p>
+		</BlurFade>
+		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			{#each features as feat, i}
+				<BlurFade
+					direction="up"
+					delay={i * 0.07}
+					class="feature-card rounded-xl border border-border bg-card p-5"
+				>
+					<div
+						class="mb-3 inline-flex size-9 items-center justify-center rounded-lg bg-accent text-accent-foreground"
+					>
+						<feat.icon size={18} />
+					</div>
+					<h4 class="mb-1 text-sm font-semibold">{feat.title}</h4>
+					<p class="text-sm leading-relaxed text-muted-foreground">{feat.desc}</p>
+				</BlurFade>
+			{/each}
+		</div>
+	</div>
+</section>
+
+<section class="px-6 py-24">
+	<div class="mx-auto max-w-5xl">
+		<BlurFade direction="up" class="mb-14 text-center">
+			<h2 class="mb-3 text-3xl sm:text-4xl">{m['landing.flow.title']()}</h2>
+			<p class="text-muted-foreground">{m['landing.flow.subtitle']()}</p>
+		</BlurFade>
+		<div class="grid gap-10 sm:grid-cols-3">
+			{#each steps as step, i}
+				<BlurFade direction="up" delay={i * 0.11}>
+					<span class="mb-4 block font-serif text-5xl font-semibold text-primary/25">{step.n}</span>
+					<h4 class="mb-2 font-semibold">{step.title}</h4>
+					<p class="text-sm leading-relaxed text-muted-foreground">{step.desc}</p>
+				</BlurFade>
+			{/each}
+		</div>
+	</div>
+</section>
+
+<section class="px-6 py-24">
+	<div class="mx-auto max-w-5xl">
+		<div class="grid items-center gap-12 lg:grid-cols-2">
+			<BlurFade direction="up">
+				<h2 class="mb-4 text-3xl sm:text-4xl">{m['landing.deploy.title']()}</h2>
+				<p class="mb-6 leading-relaxed text-muted-foreground">{m['landing.deploy.subtitle']()}</p>
+				<ul class="mb-8 space-y-2.5">
+					{#each [m['landing.deploy.check1'](), m['landing.deploy.check2'](), m['landing.deploy.check3']()] as item}
+						<li class="flex items-center gap-2 text-sm">
+							<Check size={15} class="shrink-0 text-primary" />
+							{item}
+						</li>
+					{/each}
+				</ul>
+				<Button
+					href="https://github.com/your-username/fenetre"
+					variant="outline"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					<Github />
+					{m['landing.deploy.github']()}
 				</Button>
-			</nav>
+			</BlurFade>
+
+			<BlurFade direction="up" delay={0.15} class="terminal overflow-hidden rounded-xl shadow-xl">
+				<div class="terminal-bar flex items-center gap-1.5 px-4 py-3">
+					<span class="dot bg-red-400/70"></span>
+					<span class="dot bg-yellow-400/70"></span>
+					<span class="dot bg-green-400/70"></span>
+				</div>
+				<div class="terminal-body px-5 py-4 font-mono text-sm leading-relaxed">
+					<TypingAnimation
+						content="$ git clone github.com/you/fenetre"
+						typeSpeed={30}
+						delay={200}
+						startOnView={true}
+						showCursor={false}
+						loop={false}
+						class="block leading-relaxed tracking-normal"
+					/>
+					<TypingAnimation
+						content="$ cp .env.example .env"
+						typeSpeed={30}
+						delay={1500}
+						startOnView={true}
+						showCursor={false}
+						loop={false}
+						class="block leading-relaxed tracking-normal"
+					/>
+					<TypingAnimation
+						content="$ docker compose up -d"
+						typeSpeed={30}
+						delay={2600}
+						startOnView={true}
+						showCursor={false}
+						loop={false}
+						class="block leading-relaxed tracking-normal"
+					/>
+					<TypingAnimation
+						content="✓ Ready on http://localhost:3000"
+						typeSpeed={30}
+						delay={3700}
+						startOnView={true}
+						showCursor={true}
+						blinkCursor={false}
+						loop={false}
+						class="term-success block leading-relaxed tracking-normal"
+					/>
+				</div>
+			</BlurFade>
 		</div>
-	</header>
+	</div>
+</section>
 
-	<main class="flex-1">
-		<!-- Hero Section -->
-		<section class="relative overflow-hidden pt-16 pb-16 md:pt-24 md:pb-24">
-			<!-- Advanced Background -->
-			<div class="absolute top-0 left-1/2 -z-10 h-[600px] w-full -translate-x-1/2 bg-[radial-gradient(circle_at_center,oklch(var(--primary)/0.08)_0%,transparent_70%)]"></div>
-			<div class="absolute top-0 left-0 right-0 -z-10 h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
-			
-			<div class="container mx-auto px-4 sm:px-8 flex flex-col items-center text-center gap-6">
-				<div class="inline-flex items-center rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary animate-in fade-in slide-in-from-bottom-4 duration-1000">
-					<span class="flex items-center gap-2">
-						<span class="size-1.5 rounded-full bg-primary animate-pulse"></span>
-						{m["homepage.hero.badge"]()}
-					</span>
-				</div>
-				
-				<h1 class="text-4xl font-black tracking-tight sm:text-5xl md:text-6xl lg:text-7xl max-w-4xl text-foreground">
-					{m["homepage.title"]()}
-				</h1>
-				
-				<p class="max-w-2xl leading-relaxed text-muted-foreground text-base sm:text-lg font-normal opacity-90">
-					{m["homepage.description"]()}
-				</p>
-				
-				<div class="flex flex-wrap justify-center gap-3 mt-2">
-					<Button size="lg" href="/login" class="h-11 px-6 rounded-xl text-base font-bold gap-2 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">
-						{m["homepage.get_started"]()} <ArrowRight class="size-4" />
-					</Button>
-					<Button size="lg" variant="outline" href="https://github.com/szerookii/boilerplate-auth-svelte" target="_blank" class="h-11 px-6 rounded-xl text-base font-bold gap-2 border-border/80 bg-background/50 backdrop-blur-sm hover:bg-accent transition-colors">
-						<Github class="size-4" /> GitHub
-					</Button>
-				</div>
-
-				<!-- Trust indicators -->
-				<div class="flex flex-wrap justify-center gap-x-8 gap-y-4 mt-10 opacity-50 grayscale transition-all hover:grayscale-0">
-					<div class="flex items-center gap-1.5 text-sm font-bold italic tracking-tighter">
-						<CreditCard class="size-4" /> STRIPE
-					</div>
-					<div class="flex items-center gap-1.5 text-sm font-bold tracking-tight">
-						<Shield class="size-4" /> BETTER-AUTH
-					</div>
-					<div class="flex items-center gap-1.5 text-sm font-mono font-bold">
-						<Database class="size-4" /> DRIZZLE
-					</div>
-					<div class="flex items-center gap-1.5 text-sm font-semibold">
-						<Mail class="size-4" /> RESEND
-					</div>
-				</div>
-			</div>
-		</section>
-
-		<!-- Features Grid -->
-		<section id="features" class="container mx-auto px-4 sm:px-8 py-16 md:py-20">
-			<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-				<div class="space-y-2 text-left">
-					<h2 class="text-3xl font-black tracking-tight sm:text-4xl max-w-xl">
-						{m["homepage.features.title"]()}
-					</h2>
-					<p class="text-muted-foreground text-base max-w-lg font-normal italic">
-						{m["homepage.features.subtitle"]()}
-					</p>
-				</div>
-				<div class="hidden lg:block pb-1">
-					<div class="flex -space-x-2">
-						{#each Array(5) as _}
-							<div class="size-8 rounded-full border-2 border-background bg-muted flex items-center justify-center overflow-hidden shadow-sm">
-								<img src="https://api.dicebear.com/7.x/avataaars/svg?seed={Math.random()}" alt="User avatar" />
-							</div>
-						{/each}
-						<div class="size-8 rounded-full border-2 border-background bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-bold shadow-sm">
-							+2.4k
-						</div>
-					</div>
-					<p class="text-[9px] uppercase font-bold tracking-widest text-muted-foreground mt-2 text-center">Trusted by builders</p>
-				</div>
-			</div>
-
-			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-				<!-- Payments -->
-				<div class="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-6 transition-all hover:shadow-xl hover:border-primary/20">
-					<div class="size-10 rounded-lg bg-muted flex items-center justify-center text-foreground mb-4 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-						<CreditCard class="size-5" />
-					</div>
-					<h3 class="text-lg font-black mb-2">{m["homepage.features.payments.title"]()}</h3>
-					<p class="text-muted-foreground text-sm leading-relaxed font-normal">{m["homepage.features.payments.description"]()}</p>
-				</div>
-
-				<!-- Auth -->
-				<div class="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-6 transition-all hover:shadow-xl hover:border-primary/20">
-					<div class="size-10 rounded-lg bg-muted flex items-center justify-center text-foreground mb-4 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-						<Shield class="size-5" />
-					</div>
-					<h3 class="text-lg font-black mb-2">{m["homepage.features.auth.title"]()}</h3>
-					<p class="text-muted-foreground text-sm leading-relaxed font-normal">{m["homepage.features.auth.description"]()}</p>
-				</div>
-
-				<!-- DB -->
-				<div class="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-6 transition-all hover:shadow-xl hover:border-primary/20">
-					<div class="size-10 rounded-lg bg-muted flex items-center justify-center text-foreground mb-4 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-						<Database class="size-5" />
-					</div>
-					<h3 class="text-lg font-black mb-2">{m["homepage.features.db.title"]()}</h3>
-					<p class="text-muted-foreground text-sm leading-relaxed font-normal">{m["homepage.features.db.description"]()}</p>
-				</div>
-
-				<!-- i18n -->
-				<div class="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-6 transition-all hover:shadow-xl hover:border-primary/20">
-					<div class="size-10 rounded-lg bg-muted flex items-center justify-center text-foreground mb-4 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-						<Languages class="size-5" />
-					</div>
-					<h3 class="text-lg font-black mb-2">{m["homepage.features.i18n.title"]()}</h3>
-					<p class="text-muted-foreground text-sm leading-relaxed font-normal">{m["homepage.features.i18n.description"]()}</p>
-				</div>
-
-				<!-- Forms -->
-				<div class="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-6 transition-all hover:shadow-xl hover:border-primary/20">
-					<div class="size-10 rounded-lg bg-muted flex items-center justify-center text-foreground mb-4 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-						<Zap class="size-5" />
-					</div>
-					<h3 class="text-lg font-black mb-2">{m["homepage.features.forms.title"]()}</h3>
-					<p class="text-muted-foreground text-sm leading-relaxed font-normal">{m["homepage.features.forms.description"]()}</p>
-				</div>
-
-				<!-- Emails -->
-				<div class="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-6 transition-all hover:shadow-xl hover:border-primary/20">
-					<div class="size-10 rounded-lg bg-muted flex items-center justify-center text-foreground mb-4 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-						<Mail class="size-5" />
-					</div>
-					<h3 class="text-lg font-black mb-2">{m["homepage.features.emails.title"]()}</h3>
-					<p class="text-muted-foreground text-sm leading-relaxed font-normal">{m["homepage.features.emails.description"]()}</p>
-				</div>
-			</div>
-		</section>
-	</main>
-
-	<!-- Footer -->
-	<footer class="border-t border-border/40 py-12 bg-background">
-		<div class="container mx-auto px-4 sm:px-8 flex flex-col items-center text-center gap-6">
-			<div class="flex items-center gap-2 font-black text-lg tracking-tighter">
-				<Sparkles class="size-5 text-primary fill-current" />
-				<span>Zenith</span>
-			</div>
-			<p class="text-muted-foreground text-sm font-normal max-w-sm italic opacity-80">
-				Built for creators who demand excellence and speed.
-			</p>
-			<div class="flex flex-wrap justify-center gap-6 text-xs font-bold uppercase tracking-widest text-foreground/60">
-				<a href="https://github.com" class="hover:text-primary transition-colors">GitHub</a>
-				<a href="https://twitter.com" class="hover:text-primary transition-colors">Twitter</a>
-				<a href="/login" class="hover:text-primary transition-colors">Login</a>
-				<a href="#" class="hover:text-primary transition-colors">Status</a>
-			</div>
-			<p class="text-muted-foreground/40 text-[10px] font-bold uppercase tracking-[0.2em] mt-4">
-				© {new Date().getFullYear()} Zenith Stack. Ship different.
-			</p>
+<section class="px-6 py-28 text-center">
+	<BlurFade direction="up" class="mx-auto max-w-2xl">
+		<h2 class="mb-8 text-3xl sm:text-4xl lg:text-5xl">{m['landing.cta.headline']()}</h2>
+		<div class="flex flex-wrap items-center justify-center gap-3">
+			{#if users.length === 0}
+				<Button href="/setup" size="lg">
+					{m['home.landing.setup']()}
+					<ArrowRight />
+				</Button>
+			{:else if users.length === 1}
+				<Button href="/{users[0].username}" size="lg">
+					{m['landing.cta.book_with']({ name: users[0].name })}
+					<ArrowRight />
+				</Button>
+			{:else}
+				<Button href="/directory" size="lg">
+					{m['landing.cta.browse']()}
+					<ArrowRight />
+				</Button>
+			{/if}
+			<Button href={data.user ? '/admin' : '/login'} variant="ghost" size="sm">
+				{data.user ? data.user.name : m['home.landing.login']()}
+			</Button>
 		</div>
-	</footer>
-</div>
+	</BlurFade>
+</section>
 
 <style>
-	:global(html) {
-		scroll-behavior: smooth;
+	.orb {
+		position: absolute;
+		border-radius: 50%;
+		filter: blur(88px);
+		pointer-events: none;
+		will-change: transform;
+	}
+
+	.orb-1 {
+		width: 520px;
+		height: 520px;
+		top: -140px;
+		right: -100px;
+		background: oklch(0.72 0.12 85 / 0.3);
+		animation: float1 9s ease-in-out infinite;
+	}
+
+	.orb-2 {
+		width: 380px;
+		height: 380px;
+		bottom: 80px;
+		left: -80px;
+		background: oklch(0.56 0.11 140 / 0.22);
+		animation: float2 11s ease-in-out infinite;
+	}
+
+	@keyframes float1 {
+		0%,
+		100% {
+			transform: translate(0, 0) scale(1);
+		}
+		50% {
+			transform: translate(-22px, 28px) scale(1.07);
+		}
+	}
+
+	@keyframes float2 {
+		0%,
+		100% {
+			transform: translate(0, 0) scale(1);
+		}
+		50% {
+			transform: translate(26px, -20px) scale(1.05);
+		}
+	}
+
+	:global(.feature-card) {
+		transition:
+			box-shadow 0.2s ease,
+			transform 0.2s ease;
+	}
+
+	:global(.feature-card:hover) {
+		box-shadow: var(--shadow-md);
+		transform: translateY(-2px);
+	}
+
+	:global(.terminal) {
+		background: oklch(0.13 0.016 250);
+	}
+
+	.terminal-bar {
+		background: oklch(0.18 0.016 250);
+		border-bottom: 1px solid oklch(0.22 0.016 250);
+	}
+
+	.dot {
+		display: inline-block;
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+	}
+
+	.terminal-body {
+		color: oklch(0.78 0.035 245);
+		min-height: 9rem;
+	}
+
+	:global(.term-success) {
+		color: oklch(0.72 0.2 150);
+	}
+
+	:global(.dark) .orb-1 {
+		background: oklch(0.68 0.144 56 / 0.18);
+	}
+
+	:global(.dark) .orb-2 {
+		background: oklch(0.64 0.11 140 / 0.14);
 	}
 </style>

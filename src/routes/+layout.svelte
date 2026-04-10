@@ -1,18 +1,17 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { Toaster } from '$lib/components/ui/sonner';
 	import { locales, localizeHref } from '$lib/paraglide/runtime';
-	import { Toaster } from 'svelte-sonner';
-	import { ModeWatcher } from 'mode-watcher';
+	import { ModeWatcher, mode } from 'mode-watcher';
 	import './layout.css';
-	import favicon from '$lib/assets/favicon.svg';
 
 	let { children } = $props();
 </script>
 
-<svelte:head><link rel="icon" href={favicon} /></svelte:head>
+<svelte:head><link rel="icon" href="/favicon.ico" /></svelte:head>
 
-<ModeWatcher />
-<Toaster />
+<ModeWatcher defaultMode="light" />
+<Toaster theme={mode.current === 'dark' ? 'dark' : 'light'} />
 
 {@render children()}
 <div style="display:none">
