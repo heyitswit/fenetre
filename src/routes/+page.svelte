@@ -1,10 +1,10 @@
 <script lang="ts">
 	import LanguageSelector from '$lib/components/language-selector.svelte';
+	import { BlurFade } from '$lib/components/magic/blur-fade';
+	import { MorphingText } from '$lib/components/magic/morphing-text';
+	import { TypingAnimation } from '$lib/components/magic/typing-animation';
 	import ThemeToggle from '$lib/components/theme-toggle.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { BlurFade } from '$lib/components/magic/blur-fade';
-	import { TypingAnimation } from '$lib/components/magic/typing-animation';
-	import { MorphingText } from '$lib/components/magic/morphing-text';
 	import * as m from '$lib/paraglide/messages';
 	import { getAllUsernames } from '$lib/remote/users.remote';
 	import {
@@ -77,7 +77,7 @@
 		<LanguageSelector />
 		<ThemeToggle size="icon-sm" />
 		<Button
-			href="https://github.com/your-username/fenetre"
+			href="https://github.com/gradleless/fenetre"
 			variant="ghost"
 			size="sm"
 			target="_blank"
@@ -111,7 +111,7 @@
 	</h1>
 	<MorphingText
 		texts={sources}
-		class="mb-5 h-12 max-w-2xl text-4xl font-serif font-semibold tracking-[-0.02em] text-primary sm:h-14 sm:text-5xl lg:h-16 lg:text-6xl"
+		class="mb-5 h-12 max-w-2xl font-serif text-4xl font-semibold tracking-[-0.02em] text-primary sm:h-14 sm:text-5xl lg:h-16 lg:text-6xl"
 	/>
 
 	<p
@@ -302,8 +302,8 @@
 	<div class="mx-auto flex max-w-5xl items-center justify-between">
 		<span>© {new Date().getFullYear()} Fenêtre</span>
 		<div class="flex gap-4">
-			<a href="/privacy" class="hover:text-foreground transition-colors">Privacy</a>
-			<a href="/tos" class="hover:text-foreground transition-colors">Terms</a>
+			<a href="/privacy" class="transition-colors hover:text-foreground">Privacy</a>
+			<a href="/tos" class="transition-colors hover:text-foreground">Terms</a>
 		</div>
 	</div>
 </footer>
