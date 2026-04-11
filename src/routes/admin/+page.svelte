@@ -96,7 +96,7 @@
 									{/if}
 								</div>
 								<p class="text-sm text-muted-foreground">
-									{booking.eventType.name} · {formatDate(booking.startTime.toISOString())} à {formatTime(booking.startTime.toISOString())}
+									{booking.eventType.name} · {m['common.date_at_time']({ date: formatDate(booking.startTime.toISOString()), time: formatTime(booking.startTime.toISOString()) })}
 								</p>
 							</div>
 							<Button href="/admin/bookings?id={booking.id}" variant="ghost" size="sm">

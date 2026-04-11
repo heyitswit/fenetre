@@ -114,7 +114,7 @@
 							<Card.Content class="py-4 text-sm">
 								{m['reschedule.selected']()}
 								<strong class="ml-1 capitalize">
-									{formatDate(selectedSlot.start.slice(0, 10))} à {formatTime(selectedSlot.start)}
+									{m['common.date_at_time']({ date: formatDate(selectedSlot.start.slice(0, 10)), time: formatTime(selectedSlot.start) })}
 								</strong>
 							</Card.Content>
 						</Card.Root>

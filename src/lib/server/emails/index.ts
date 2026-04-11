@@ -118,6 +118,29 @@ export function passwordResetEmail(resetUrl: string, locale: Locale = 'fr'): { s
 	}
 }
 
+const MISSION_KEYS = {
+	courte: 'brief.mission.courte',
+	longue: 'brief.mission.longue',
+	conseil: 'brief.mission.conseil',
+} as const satisfies Record<string, keyof typeof m>
+
+const URGENCY_KEYS = {
+	normal: 'brief.urgency.normal',
+	urgent: 'brief.urgency.urgent',
+} as const satisfies Record<string, keyof typeof m>
+
+function translateMissionType(type: string | null, l: { locale: Locale }): string | null {
+	if (!type) return null
+	const key = MISSION_KEYS[type as keyof typeof MISSION_KEYS]
+	return key ? m[key]({}, l) : type
+}
+
+function translateUrgency(type: string | null, l: { locale: Locale }): string | null {
+	if (!type) return null
+	const key = URGENCY_KEYS[type as keyof typeof URGENCY_KEYS]
+	return key ? m[key]({}, l) : type
+}
+
 export function notificationEmail(data: NotificationEmailData): { subject: string; html: string } {
 	const l = { locale: data.locale } as const
 
@@ -135,7 +158,11 @@ export function notificationEmail(data: NotificationEmailData): { subject: strin
 			eventTypeName: data.eventTypeName,
 			date: formatDayLabel(data.startTime, data.locale),
 			meetLink: data.meetLink,
-			brief: data.brief,
+			brief: data.brief ? {
+			...data.brief,
+			missionType: translateMissionType(data.brief.missionType, l),
+			urgency: translateUrgency(data.brief.urgency, l)
+		} : null,
 			labelName: m['email.notification.label_name']({}, l),
 			labelEmail: m['email.notification.label_email']({}, l),
 			labelSource: m['email.notification.label_source']({}, l),

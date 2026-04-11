@@ -272,6 +272,9 @@
 	"admin.settings.portfolio.mission.longue": "Mission longue",
 	"admin.settings.portfolio.mission.conseil": "Conseil",
 
+	"common.date_at_time": "{date} à {time}",
+	"admin.bookings.datetime": "{date} à {start} — {end}",
+
 	"admin.bookings.filter.all": "Tous",
 	"admin.bookings.filter.status": "Statut",
 	"admin.bookings.filter.source": "Source",

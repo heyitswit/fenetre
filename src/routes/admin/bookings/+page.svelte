@@ -71,6 +71,25 @@
 		return STATUSES.find((s) => s.value === status)?.label ?? status;
 	}
 
+	const MISSION_LABELS: Record<string, () => string> = {
+		courte: m['brief.mission.courte'],
+		longue: m['brief.mission.longue'],
+		conseil: m['brief.mission.conseil']
+	};
+
+	const URGENCY_LABELS: Record<string, () => string> = {
+		normal: m['brief.urgency.normal'],
+		urgent: m['brief.urgency.urgent']
+	};
+
+	function missionLabel(type: string) {
+		return MISSION_LABELS[type]?.() ?? type;
+	}
+
+	function urgencyLabel(type: string) {
+		return URGENCY_LABELS[type]?.() ?? type;
+	}
+
 	function statusBadgeVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
 		if (status === 'confirmed') return 'default';
 		if (status === 'cancelled') return 'destructive';
@@ -181,8 +200,11 @@
 					</Card.Header>
 					<Card.Content class="flex flex-col gap-1 text-sm text-muted-foreground">
 						<p>
-							{formatDate(selected.startTime.toISOString())} à {formatTime(selected.startTime.toISOString())}
-							— {formatTime(selected.endTime.toISOString())}
+							{m['admin.bookings.datetime']({
+								date: formatDate(selected.startTime.toISOString()),
+								start: formatTime(selected.startTime.toISOString()),
+								end: formatTime(selected.endTime.toISOString())
+							})}
 						</p>
 						{#if selected.source}
 							<p>{m['admin.bookings.source']()} {selected.source}</p>
@@ -219,13 +241,13 @@
 									<span>{m['admin.bookings.brief.stack']()} {selected.brief.stack}</span>
 								{/if}
 								{#if selected.brief.missionType}
-									<span>{m['admin.bookings.brief.mission']()} {selected.brief.missionType}</span>
+									<span>{m['admin.bookings.brief.mission']()} {missionLabel(selected.brief.missionType)}</span>
 								{/if}
 								{#if selected.brief.budget}
 									<span>{m['admin.bookings.brief.budget']()} {selected.brief.budget}</span>
 								{/if}
 								{#if selected.brief.urgency}
-									<span>{m['admin.bookings.brief.urgency']()} {selected.brief.urgency}</span>
+									<span>{m['admin.bookings.brief.urgency']()} {urgencyLabel(selected.brief.urgency)}</span>
 								{/if}
 							</div>
 						</Card.Content>
