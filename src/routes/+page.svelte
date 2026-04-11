@@ -298,6 +298,16 @@
 	</BlurFade>
 </section>
 
+<footer class="border-t border-border/60 px-6 py-6 text-center text-xs text-muted-foreground">
+	<div class="mx-auto flex max-w-5xl items-center justify-between">
+		<span>© {new Date().getFullYear()} Fenêtre</span>
+		<div class="flex gap-4">
+			<a href="/privacy" class="hover:text-foreground transition-colors">Privacy</a>
+			<a href="/tos" class="hover:text-foreground transition-colors">Terms</a>
+		</div>
+	</div>
+</footer>
+
 <style>
 	.orb {
 		position: absolute;
