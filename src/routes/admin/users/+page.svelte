@@ -128,49 +128,60 @@
 
 	{#if creating}
 		<div transition:slide={{ duration: 200, axis: 'y' }}>
-		<Card.Root>
-			<Card.Header>
-				<Card.Title class="text-base">{m['admin.users.invite']()}</Card.Title>
-			</Card.Header>
-			<Card.Content>
-				<form onsubmit={(e) => { e.preventDefault(); submitCreate(); }}>
-					<FieldGroup>
-						<Field>
-							<FieldLabel for="u-name">{m['admin.users.form.name']()}</FieldLabel>
-							<Input id="u-name" bind:value={formName} required />
-						</Field>
-						<Field>
-							<FieldLabel for="u-email">{m['admin.users.form.email']()}</FieldLabel>
-							<Input id="u-email" type="email" bind:value={formEmail} required />
-						</Field>
-						<Field>
-							<FieldLabel for="u-password">{m['admin.users.form.password']()}</FieldLabel>
-							<Input id="u-password" type="password" bind:value={formPassword} minlength={8} required />
-						</Field>
-						<div class="flex justify-end gap-2">
-							<Button type="button" variant="ghost" onclick={() => (creating = false)}>
-								{m['admin.users.form.cancel']()}
-							</Button>
-							<Button type="submit" disabled={submitting}>
-								{#if submitting}<Spinner class="mr-2" />{/if}
-								{m['admin.users.form.save']()}
-							</Button>
-						</div>
-					</FieldGroup>
-				</form>
-			</Card.Content>
-		</Card.Root>
+			<Card.Root>
+				<Card.Header>
+					<Card.Title class="text-base">{m['admin.users.invite']()}</Card.Title>
+				</Card.Header>
+				<Card.Content>
+					<form
+						onsubmit={(e) => {
+							e.preventDefault();
+							submitCreate();
+						}}
+					>
+						<FieldGroup>
+							<Field>
+								<FieldLabel for="u-name">{m['admin.users.form.name']()}</FieldLabel>
+								<Input id="u-name" bind:value={formName} required />
+							</Field>
+							<Field>
+								<FieldLabel for="u-email">{m['admin.users.form.email']()}</FieldLabel>
+								<Input id="u-email" type="email" bind:value={formEmail} required />
+							</Field>
+							<Field>
+								<FieldLabel for="u-password">{m['admin.users.form.password']()}</FieldLabel>
+								<Input
+									id="u-password"
+									type="password"
+									bind:value={formPassword}
+									minlength={8}
+									required
+								/>
+							</Field>
+							<div class="flex justify-end gap-2">
+								<Button type="button" variant="ghost" onclick={() => (creating = false)}>
+									{m['admin.users.form.cancel']()}
+								</Button>
+								<Button type="submit" disabled={submitting}>
+									{#if submitting}<Spinner class="mr-2" />{/if}
+									{m['admin.users.form.save']()}
+								</Button>
+							</div>
+						</FieldGroup>
+					</form>
+				</Card.Content>
+			</Card.Root>
 
-		<Separator />
+			<Separator />
 		</div>
 	{/if}
 
 	{#if users.length === 0}
-			<p class="text-sm text-muted-foreground">{m['admin.users.empty']()}</p>
-		{:else}
-			<div class="flex flex-col gap-3">
-				{#each users as u (u.id)}
-					<div transition:slide={{ duration: 200, axis: 'y' }}>
+		<p class="text-sm text-muted-foreground">{m['admin.users.empty']()}</p>
+	{:else}
+		<div class="flex flex-col gap-3">
+			{#each users as u (u.id)}
+				<div transition:slide={{ duration: 200, axis: 'y' }}>
 					<Card.Root>
 						<Card.Content class="flex items-center justify-between gap-4 py-4">
 							<div class="flex flex-col gap-1">
@@ -207,7 +218,11 @@
 
 									{#if isSuperAdmin}
 										{#if u.role !== 'admin' && u.role !== 'superadmin'}
-											<Button variant="ghost" size="sm" onclick={() => handleSetRole(u.id, 'admin')}>
+											<Button
+												variant="ghost"
+												size="sm"
+												onclick={() => handleSetRole(u.id, 'admin')}
+											>
 												Make admin
 											</Button>
 										{:else if u.role === 'admin'}
@@ -229,8 +244,8 @@
 							{/if}
 						</Card.Content>
 					</Card.Root>
-					</div>
-				{/each}
-			</div>
+				</div>
+			{/each}
+		</div>
 	{/if}
 </div>

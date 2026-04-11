@@ -206,12 +206,12 @@ export const createBooking = command(
 			sendNotificationToFreelance(fullBooking, settingsRow.notificationEmail ?? undefined)
 		]);
 
-		const companyName = fullBooking.brief?.companyName
+		const companyName = fullBooking.brief?.companyName;
 		if (companyName) {
-			const { enrichFromPappers } = await import('$lib/server/pappers')
+			const { enrichFromPappers } = await import('$lib/server/pappers');
 			void enrichFromPappers(companyName, booking.id).catch((err) => {
-				console.error('Pappers enrichment failed for booking', booking.id, err)
-			})
+				console.error('Pappers enrichment failed for booking', booking.id, err);
+			});
 		}
 
 		return { bookingId: booking.id, eventSlug: eventType.slug };

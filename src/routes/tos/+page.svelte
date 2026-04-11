@@ -10,21 +10,23 @@
 <div class="min-h-screen bg-background px-6 py-16">
 	<div class="mx-auto max-w-2xl">
 		<div class="mb-10">
-			<Button href="/" variant="ghost" size="sm" class="-ml-2 mb-6">
+			<Button href="/" variant="ghost" size="sm" class="mb-6 -ml-2">
 				<ArrowLeft size={16} />
 				Back
 			</Button>
-			<div class="flex items-center gap-2 mb-1">
+			<div class="mb-1 flex items-center gap-2">
 				<img src="/image.png" alt="Fenêtre" class="size-5 rounded-full" />
 				<span class="text-sm font-semibold tracking-tight">Fenêtre</span>
 			</div>
-			<h1 class="text-3xl font-bold mt-4">Terms of Service</h1>
-			<p class="text-sm text-muted-foreground mt-1">Last updated: April 11, 2025</p>
+			<h1 class="mt-4 text-3xl font-bold">Terms of Service</h1>
+			<p class="mt-1 text-sm text-muted-foreground">Last updated: April 11, 2025</p>
 		</div>
 
-		<div class="prose prose-neutral dark:prose-invert max-w-none space-y-8 text-sm leading-relaxed text-foreground">
+		<div
+			class="prose prose-neutral dark:prose-invert max-w-none space-y-8 text-sm leading-relaxed text-foreground"
+		>
 			<section>
-				<h2 class="text-base font-semibold mb-2">1. What Fenêtre is</h2>
+				<h2 class="mb-2 text-base font-semibold">1. What Fenêtre is</h2>
 				<p class="text-muted-foreground">
 					Fenêtre is an open-source, self-hosted scheduling tool for freelancers. By booking a call
 					or creating an account through a Fenêtre-powered page, you agree to these terms.
@@ -32,7 +34,7 @@
 			</section>
 
 			<section>
-				<h2 class="text-base font-semibold mb-2">2. Booking a call</h2>
+				<h2 class="mb-2 text-base font-semibold">2. Booking a call</h2>
 				<p class="text-muted-foreground">
 					When you book a call through Fenêtre, you are scheduling a meeting with an independent
 					freelancer — not with Fenêtre itself. The freelancer is solely responsible for the content
@@ -41,9 +43,9 @@
 			</section>
 
 			<section>
-				<h2 class="text-base font-semibold mb-2">3. Acceptable use</h2>
-				<p class="text-muted-foreground mb-3">You agree not to:</p>
-				<ul class="list-disc pl-5 space-y-1 text-muted-foreground">
+				<h2 class="mb-2 text-base font-semibold">3. Acceptable use</h2>
+				<p class="mb-3 text-muted-foreground">You agree not to:</p>
+				<ul class="list-disc space-y-1 pl-5 text-muted-foreground">
 					<li>Submit false or misleading information when booking</li>
 					<li>Abuse the platform to send spam or unsolicited contact</li>
 					<li>Attempt to access, modify, or disrupt any part of the service</li>
@@ -52,7 +54,7 @@
 			</section>
 
 			<section>
-				<h2 class="text-base font-semibold mb-2">4. Cancellations and rescheduling</h2>
+				<h2 class="mb-2 text-base font-semibold">4. Cancellations and rescheduling</h2>
 				<p class="text-muted-foreground">
 					You may cancel or reschedule your appointment using the link provided in your confirmation
 					email. The freelancer's availability at the new time is not guaranteed and is subject to
@@ -61,7 +63,7 @@
 			</section>
 
 			<section>
-				<h2 class="text-base font-semibold mb-2">5. Freelancer accounts</h2>
+				<h2 class="mb-2 text-base font-semibold">5. Freelancer accounts</h2>
 				<p class="text-muted-foreground">
 					If you are a freelancer self-hosting or using a Fenêtre instance, you are responsible for
 					all activity on your account, for keeping your credentials secure, and for complying with
@@ -70,7 +72,7 @@
 			</section>
 
 			<section>
-				<h2 class="text-base font-semibold mb-2">6. Availability</h2>
+				<h2 class="mb-2 text-base font-semibold">6. Availability</h2>
 				<p class="text-muted-foreground">
 					Fenêtre is provided as-is. The operator of this instance makes no guarantees of uptime or
 					availability. Scheduled appointments may be affected by service outages.
@@ -78,7 +80,7 @@
 			</section>
 
 			<section>
-				<h2 class="text-base font-semibold mb-2">7. Limitation of liability</h2>
+				<h2 class="mb-2 text-base font-semibold">7. Limitation of liability</h2>
 				<p class="text-muted-foreground">
 					To the maximum extent permitted by law, Fenêtre and its operators are not liable for any
 					indirect, incidental, or consequential damages arising from your use of the service,
@@ -87,7 +89,7 @@
 			</section>
 
 			<section>
-				<h2 class="text-base font-semibold mb-2">8. Changes to these terms</h2>
+				<h2 class="mb-2 text-base font-semibold">8. Changes to these terms</h2>
 				<p class="text-muted-foreground">
 					The operator of this Fenêtre instance may update these terms at any time. Continued use of
 					the service after changes are posted constitutes acceptance.
@@ -95,9 +97,10 @@
 			</section>
 
 			<section>
-				<h2 class="text-base font-semibold mb-2">9. Contact</h2>
+				<h2 class="mb-2 text-base font-semibold">9. Contact</h2>
 				<p class="text-muted-foreground">
-					For questions about these terms, contact the freelancer who operates this Fenêtre instance.
+					For questions about these terms, contact the freelancer who operates this Fenêtre
+					instance.
 				</p>
 			</section>
 		</div>

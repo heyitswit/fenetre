@@ -130,9 +130,9 @@ After logging in, `/admin` gives access to:
 
 ```html
 <script
-  src="https://your-fenetre-instance.com/booking-widget.js"
-  data-url="https://your-fenetre-instance.com"
-  data-username="alice"
+	src="https://your-fenetre-instance.com/booking-widget.js"
+	data-url="https://your-fenetre-instance.com"
+	data-username="alice"
 ></script>
 ```
 
@@ -150,10 +150,10 @@ After logging in, `/admin` gives access to:
 
 **Optional attributes on each button:**
 
-| Attribute | Description |
-| --- | --- |
-| `data-username` | Override the default username set on the script tag |
-| `data-from` | Source tag passed to the booking (default: `"portfolio"`) |
+| Attribute       | Description                                               |
+| --------------- | --------------------------------------------------------- |
+| `data-username` | Override the default username set on the script tag       |
+| `data-from`     | Source tag passed to the booking (default: `"portfolio"`) |
 
 The modal closes automatically when the booking is confirmed or when the user clicks outside it.
 

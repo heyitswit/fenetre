@@ -11,7 +11,11 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Field, FieldGroup, FieldLabel } from '$lib/components/ui/field/index.js';
 	import { slide } from 'svelte/transition';
-	import { getAllEventTypes, createEventType, updateEventType } from '$lib/remote/eventTypes.remote';
+	import {
+		getAllEventTypes,
+		createEventType,
+		updateEventType
+	} from '$lib/remote/eventTypes.remote';
 
 	type EventType = Awaited<ReturnType<typeof getAllEventTypes>>[number];
 
@@ -90,7 +94,9 @@
 	async function toggleActive(et: EventType) {
 		try {
 			await updateEventType({ id: et.id, isActive: !et.isActive });
-			toast.success(et.isActive ? m['admin.event_types.deactivated']() : m['admin.event_types.activated']());
+			toast.success(
+				et.isActive ? m['admin.event_types.deactivated']() : m['admin.event_types.activated']()
+			);
 		} catch {
 			toast.error(m['admin.event_types.error']());
 		}
@@ -105,58 +111,66 @@
 
 	{#if creating || editing}
 		<div transition:slide={{ duration: 200, axis: 'y' }}>
-		<Card.Root>
-			<Card.Header>
-				<Card.Title class="text-base">
-					{creating ? m['admin.event_types.new']() : m['admin.event_types.edit']()}
-				</Card.Title>
-			</Card.Header>
-			<Card.Content>
-				<form onsubmit={(e) => { e.preventDefault(); creating ? submitCreate() : submitEdit(); }}>
-					<FieldGroup>
-						<div class="grid grid-cols-2 gap-4">
+			<Card.Root>
+				<Card.Header>
+					<Card.Title class="text-base">
+						{creating ? m['admin.event_types.new']() : m['admin.event_types.edit']()}
+					</Card.Title>
+				</Card.Header>
+				<Card.Content>
+					<form
+						onsubmit={(e) => {
+							e.preventDefault();
+							creating ? submitCreate() : submitEdit();
+						}}
+					>
+						<FieldGroup>
+							<div class="grid grid-cols-2 gap-4">
+								<Field>
+									<FieldLabel for="f-name">{m['admin.event_types.form.name']()}</FieldLabel>
+									<Input id="f-name" bind:value={formName} required />
+								</Field>
+								<Field>
+									<FieldLabel for="f-slug">{m['admin.event_types.form.slug']()}</FieldLabel>
+									<Input id="f-slug" bind:value={formSlug} required />
+								</Field>
+							</div>
 							<Field>
-								<FieldLabel for="f-name">{m['admin.event_types.form.name']()}</FieldLabel>
-								<Input id="f-name" bind:value={formName} required />
+								<FieldLabel for="f-desc">{m['admin.event_types.form.description']()}</FieldLabel>
+								<Textarea id="f-desc" bind:value={formDescription} rows={2} />
 							</Field>
-							<Field>
-								<FieldLabel for="f-slug">{m['admin.event_types.form.slug']()}</FieldLabel>
-								<Input id="f-slug" bind:value={formSlug} required />
-							</Field>
-						</div>
-						<Field>
-							<FieldLabel for="f-desc">{m['admin.event_types.form.description']()}</FieldLabel>
-							<Textarea id="f-desc" bind:value={formDescription} rows={2} />
-						</Field>
-						<div class="grid grid-cols-2 gap-4">
-							<Field>
-								<FieldLabel for="f-duration">{m['admin.event_types.form.duration']()}</FieldLabel>
-								<Input id="f-duration" type="number" bind:value={formDuration} min={5} required />
-							</Field>
-							<Field>
-								<FieldLabel for="f-order">{m['admin.event_types.form.order']()}</FieldLabel>
-								<Input id="f-order" type="number" bind:value={formSortOrder} />
-							</Field>
-						</div>
-						<div class="flex justify-end gap-2">
-							<Button
-								type="button"
-								variant="ghost"
-								onclick={() => { creating = false; editing = null; }}
-							>
-								{m['admin.event_types.form.cancel']()}
-							</Button>
-							<Button type="submit" disabled={submitting}>
-								{#if submitting}<Spinner class="mr-2" />{/if}
-								{m['admin.event_types.form.save']()}
-							</Button>
-						</div>
-					</FieldGroup>
-				</form>
-			</Card.Content>
-		</Card.Root>
+							<div class="grid grid-cols-2 gap-4">
+								<Field>
+									<FieldLabel for="f-duration">{m['admin.event_types.form.duration']()}</FieldLabel>
+									<Input id="f-duration" type="number" bind:value={formDuration} min={5} required />
+								</Field>
+								<Field>
+									<FieldLabel for="f-order">{m['admin.event_types.form.order']()}</FieldLabel>
+									<Input id="f-order" type="number" bind:value={formSortOrder} />
+								</Field>
+							</div>
+							<div class="flex justify-end gap-2">
+								<Button
+									type="button"
+									variant="ghost"
+									onclick={() => {
+										creating = false;
+										editing = null;
+									}}
+								>
+									{m['admin.event_types.form.cancel']()}
+								</Button>
+								<Button type="submit" disabled={submitting}>
+									{#if submitting}<Spinner class="mr-2" />{/if}
+									{m['admin.event_types.form.save']()}
+								</Button>
+							</div>
+						</FieldGroup>
+					</form>
+				</Card.Content>
+			</Card.Root>
 
-		<Separator />
+			<Separator />
 		</div>
 	{/if}
 

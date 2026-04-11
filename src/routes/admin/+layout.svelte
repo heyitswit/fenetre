@@ -4,7 +4,15 @@
 	import * as m from '$lib/paraglide/messages';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { CalendarDays, Users, Settings, LayoutDashboard, Clock, LogOut, UserCog } from '@lucide/svelte';
+	import {
+		CalendarDays,
+		Users,
+		Settings,
+		LayoutDashboard,
+		Clock,
+		LogOut,
+		UserCog
+	} from '@lucide/svelte';
 	import LanguageSelector from '$lib/components/language-selector.svelte';
 	import ThemeToggle from '$lib/components/theme-toggle.svelte';
 

@@ -20,7 +20,10 @@
 	const booking = $derived(await getBookingByToken({ token }));
 	const slots = $derived(
 		booking?.username
-			? await getAvailableSlots({ username: booking.username, eventTypeSlug: booking.eventType.slug })
+			? await getAvailableSlots({
+					username: booking.username,
+					eventTypeSlug: booking.eventType.slug
+				})
 			: {}
 	);
 
@@ -43,11 +46,10 @@
 			submitting = false;
 		}
 	}
-
 </script>
 
 <div class="mx-auto max-w-lg px-4 py-12">
-	<Button href="/" variant="ghost" class="-ml-2 mb-6">
+	<Button href="/" variant="ghost" class="mb-6 -ml-2">
 		<ChevronLeft class="size-4" />{m['booking.back']()}
 	</Button>
 
@@ -98,8 +100,8 @@
 									onclick={() => (selectedSlot = slot)}
 									class="rounded-lg border px-3 py-1.5 text-sm transition-colors
 										{selectedSlot?.start === slot.start
-											? 'border-primary bg-primary text-primary-foreground'
-											: 'hover:border-primary/50 hover:bg-accent'}"
+										? 'border-primary bg-primary text-primary-foreground'
+										: 'hover:border-primary/50 hover:bg-accent'}"
 								>
 									{formatTime(slot.start)}
 								</button>
@@ -114,7 +116,10 @@
 							<Card.Content class="py-4 text-sm">
 								{m['reschedule.selected']()}
 								<strong class="ml-1 capitalize">
-									{m['common.date_at_time']({ date: formatDate(selectedSlot.start.slice(0, 10)), time: formatTime(selectedSlot.start) })}
+									{m['common.date_at_time']({
+										date: formatDate(selectedSlot.start.slice(0, 10)),
+										time: formatTime(selectedSlot.start)
+									})}
 								</strong>
 							</Card.Content>
 						</Card.Root>

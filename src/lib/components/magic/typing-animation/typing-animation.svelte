@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { motion, type MotionProps, inView } from "motion-sv";
-	import { cn } from "$lib/utils.js";
-	import { watch } from "runed";
+	import { motion, type MotionProps, inView } from 'motion-sv';
+	import { cn } from '$lib/utils.js';
+	import { watch } from 'runed';
 
 	interface TypingAnimationProps extends MotionProps {
 		content?: string; // Single text string to type
@@ -16,7 +16,7 @@
 		startOnView?: boolean;
 		showCursor?: boolean;
 		blinkCursor?: boolean;
-		cursorStyle?: "line" | "block" | "underscore";
+		cursorStyle?: 'line' | 'block' | 'underscore';
 	}
 
 	let {
@@ -32,14 +32,14 @@
 		startOnView = true,
 		showCursor = true,
 		blinkCursor = true,
-		cursorStyle = "line",
+		cursorStyle = 'line',
 		...props
 	}: TypingAnimationProps = $props();
 
-	let displayedText = $state("");
+	let displayedText = $state('');
 	let currentWordIndex = $state(0);
 	let currentCharIndex = $state(0);
-	let phase = $state<"typing" | "pause" | "deleting">("typing");
+	let phase = $state<'typing' | 'pause' | 'deleting'>('typing');
 
 	let elementRef: HTMLElement | null = $state(null);
 
@@ -84,25 +84,25 @@
 	let runAnimation = () => {
 		if (!shouldStart || wordsToAnimate.length === 0) return;
 
-		const currentWord = wordsToAnimate[currentWordIndex] || "";
+		const currentWord = wordsToAnimate[currentWordIndex] || '';
 		const graphemes = Array.from(currentWord);
 
 		// Calculate delay based on current phase and initial delay
 		const timeoutDelay =
-			delay > 0 && displayedText === ""
+			delay > 0 && displayedText === ''
 				? delay
-				: phase === "typing"
+				: phase === 'typing'
 					? typingSpeed
-					: phase === "deleting"
+					: phase === 'deleting'
 						? deletingSpeed
 						: pauseDelay;
 
 		timeoutId = setTimeout(() => {
 			switch (phase) {
-				case "typing":
+				case 'typing':
 					// Type next character
 					if (currentCharIndex < graphemes.length) {
-						displayedText = graphemes.slice(0, currentCharIndex + 1).join("");
+						displayedText = graphemes.slice(0, currentCharIndex + 1).join('');
 						currentCharIndex = currentCharIndex + 1;
 						runAnimation(); // Continue animation
 					} else {
@@ -110,30 +110,30 @@
 						if (hasMultipleWords || loop) {
 							const isLastWord = currentWordIndex === wordsToAnimate.length - 1;
 							if (!isLastWord || loop) {
-								phase = "pause";
+								phase = 'pause';
 								runAnimation(); // Continue animation
 							}
 						}
 					}
 					break;
 
-				case "pause":
+				case 'pause':
 					// Move to deleting phase after pause
-					phase = "deleting";
+					phase = 'deleting';
 					runAnimation(); // Continue animation
 					break;
 
-				case "deleting":
+				case 'deleting':
 					// Delete previous character
 					if (currentCharIndex > 0) {
-						displayedText = graphemes.slice(0, currentCharIndex - 1).join("");
+						displayedText = graphemes.slice(0, currentCharIndex - 1).join('');
 						currentCharIndex = currentCharIndex - 1;
 						runAnimation(); // Continue animation
 					} else {
 						// Finished deleting, move to next word
 						const nextIndex = (currentWordIndex + 1) % wordsToAnimate.length;
 						currentWordIndex = nextIndex;
-						phase = "typing";
+						phase = 'typing';
 						runAnimation(); // Continue animation
 					}
 					break;
@@ -149,10 +149,10 @@
 			if (timeoutId) clearTimeout(timeoutId);
 
 			// Reset state
-			displayedText = "";
+			displayedText = '';
 			currentWordIndex = 0;
 			currentCharIndex = 0;
-			phase = "typing";
+			phase = 'typing';
 
 			// Start animation if shouldStart is true
 			if (shouldStart && wordsToAnimate.length > 0) {
@@ -162,14 +162,14 @@
 	);
 
 	// Derived: Current word as array of graphemes
-	let currentWordGraphemes = $derived(Array.from(wordsToAnimate[currentWordIndex] || ""));
+	let currentWordGraphemes = $derived(Array.from(wordsToAnimate[currentWordIndex] || ''));
 
 	// Derived: Animation is complete (not looping and finished last word)
 	let isComplete = $derived(
 		!loop &&
 			currentWordIndex === wordsToAnimate.length - 1 &&
 			currentCharIndex >= currentWordGraphemes.length &&
-			phase !== "deleting"
+			phase !== 'deleting'
 	);
 
 	// Derived: Should show cursor
@@ -182,13 +182,13 @@
 	// Helper: Get cursor character based on style
 	function getCursorChar() {
 		switch (cursorStyle) {
-			case "block":
-				return "▌";
-			case "underscore":
-				return "_";
-			case "line":
+			case 'block':
+				return '▌';
+			case 'underscore':
+				return '_';
+			case 'line':
 			default:
-				return "|";
+				return '|';
 		}
 	}
 </script>
@@ -196,12 +196,12 @@
 <!-- Render motion component as span -->
 <motion.span
 	bind:ref={elementRef}
-	class={cn("leading-20 tracking-[-0.02em]", className)}
+	class={cn('leading-20 tracking-[-0.02em]', className)}
 	{...props}
 >
 	{displayedText}
 	{#if shouldShowCursor}
-		<span class={cn("inline-block", blinkCursor && "animate-blink-cursor")}>
+		<span class={cn('inline-block', blinkCursor && 'animate-blink-cursor')}>
 			{getCursorChar()}
 		</span>
 	{/if}

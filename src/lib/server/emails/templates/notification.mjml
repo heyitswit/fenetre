@@ -1,144 +1,275 @@
 <mjml>
-  <mj-head>
-    <mj-font name="Plus Jakarta Sans" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" />
-    <mj-font name="Lora" href="https://fonts.googleapis.com/css2?family=Lora:wght@600&display=swap" />
-    <mj-attributes>
-      <mj-all font-family="'Plus Jakarta Sans', sans-serif" />
-      <mj-text font-size="15px" line-height="1.6" color="#3c2010" padding="0" />
-      <mj-section padding="0" />
-      <mj-column padding="0" background-color="transparent" />
-    </mj-attributes>
-  </mj-head>
+	<mj-head>
+		<mj-font
+			name="Plus Jakarta Sans"
+			href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap"
+		/>
+		<mj-font
+			name="Lora"
+			href="https://fonts.googleapis.com/css2?family=Lora:wght@600&display=swap"
+		/>
+		<mj-attributes>
+			<mj-all font-family="'Plus Jakarta Sans', sans-serif" />
+			<mj-text font-size="15px" line-height="1.6" color="#3c2010" padding="0" />
+			<mj-section padding="0" />
+			<mj-column padding="0" background-color="transparent" />
+		</mj-attributes>
+	</mj-head>
 
-  <mj-body background-color="#eee8dc">
+	<mj-body background-color="#eee8dc">
+		<mj-section padding="36px 0 0" />
 
-    <mj-section padding="36px 0 0" />
+		<!-- Brand -->
+		<mj-section padding="0 24px 14px">
+			<mj-column>
+				<mj-text font-size="13px" font-weight="600" color="#c06428" letter-spacing="0.06em">
+					Fenêtre
+				</mj-text>
+			</mj-column>
+		</mj-section>
 
-    <!-- Brand -->
-    <mj-section padding="0 24px 14px">
-      <mj-column>
-        <mj-text font-size="13px" font-weight="600" color="#c06428" letter-spacing="0.06em">
-          Fenêtre
-        </mj-text>
-      </mj-column>
-    </mj-section>
+		<!-- Card -->
+		<mj-section padding="0 24px">
+			<mj-column
+				background-color="#f4f0e8"
+				border-radius="16px"
+				border="1px solid #d4c8b4"
+				padding="36px 32px"
+			>
+				<!-- Title + source badge -->
+				<mj-text
+					font-size="20px"
+					font-weight="600"
+					padding-bottom="6px"
+					font-family="'Lora', Georgia, serif"
+				>
+					{{ title }}
+				</mj-text>
+				<mj-text padding-bottom="28px">
+					<span
+						style="
+							display: inline-block;
+							background: #ddc8a0;
+							color: #3c2010;
+							font-size: 12px;
+							font-weight: 600;
+							padding: 3px 10px;
+							border-radius: 100px;
+							text-transform: capitalize;
+						"
+					>
+						{{ source }}
+					</span>
+				</mj-text>
 
-    <!-- Card -->
-    <mj-section padding="0 24px">
-      <mj-column background-color="#f4f0e8" border-radius="16px" border="1px solid #d4c8b4" padding="36px 32px">
+				<!-- Info rows -->
+				<mj-text padding-bottom="10px">
+					<span
+						style="
+							color: #9e7e64;
+							font-size: 12px;
+							font-weight: 600;
+							text-transform: uppercase;
+							letter-spacing: 0.06em;
+							display: block;
+							margin-bottom: 14px;
+						"
+						>CLIENT</span
+					>
+					<table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%">
+						<tr>
+							<td
+								style="
+									color: #7a4e30;
+									font-size: 13px;
+									width: 80px;
+									padding-bottom: 8px;
+									vertical-align: top;
+								"
+							>
+								{{ labelName }}
+							</td>
+							<td
+								style="font-size: 14px; font-weight: 500; padding-bottom: 8px; vertical-align: top"
+							>
+								{{ clientName }}
+							</td>
+						</tr>
+						<tr>
+							<td style="color: #7a4e30; font-size: 13px; padding-bottom: 8px; vertical-align: top">
+								{{ labelEmail }}
+							</td>
+							<td style="font-size: 14px; padding-bottom: 8px; vertical-align: top">
+								<a
+									href="mailto:{{clientEmail}}"
+									style="color: #c06428; text-decoration: none; font-weight: 500"
+									>{{ clientEmail }}</a
+								>
+							</td>
+						</tr>
+						{{#if clientLinkedin}}
+						<tr>
+							<td style="color: #7a4e30; font-size: 13px; padding-bottom: 8px; vertical-align: top">
+								{{ labelLinkedin }}
+							</td>
+							<td style="font-size: 14px; padding-bottom: 8px; vertical-align: top">
+								<a href="{{clientLinkedin}}" style="color: #c06428; text-decoration: none">{{
+									clientLinkedin
+								}}</a>
+							</td>
+						</tr>
+						{{/if}}
+					</table>
+				</mj-text>
 
-        <!-- Title + source badge -->
-        <mj-text font-size="20px" font-weight="600" padding-bottom="6px" font-family="'Lora', Georgia, serif">
-          {{title}}
-        </mj-text>
-        <mj-text padding-bottom="28px">
-          <span style="display:inline-block; background:#ddc8a0; color:#3c2010; font-size:12px; font-weight:600; padding:3px 10px; border-radius:100px; text-transform:capitalize;">
-            {{source}}
-          </span>
-        </mj-text>
+				<mj-divider border-color="#d4c8b4" border-width="1px" padding="4px 0 20px 0" />
 
-        <!-- Info rows -->
-        <mj-text padding-bottom="10px">
-          <span style="color:#9e7e64; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; display:block; margin-bottom:14px;">CLIENT</span>
-          <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
-            <tr>
-              <td style="color:#7a4e30; font-size:13px; width:80px; padding-bottom:8px; vertical-align:top;">{{labelName}}</td>
-              <td style="font-size:14px; font-weight:500; padding-bottom:8px; vertical-align:top;">{{clientName}}</td>
-            </tr>
-            <tr>
-              <td style="color:#7a4e30; font-size:13px; padding-bottom:8px; vertical-align:top;">{{labelEmail}}</td>
-              <td style="font-size:14px; padding-bottom:8px; vertical-align:top;">
-                <a href="mailto:{{clientEmail}}" style="color:#c06428; text-decoration:none; font-weight:500;">{{clientEmail}}</a>
-              </td>
-            </tr>
-            {{#if clientLinkedin}}
-            <tr>
-              <td style="color:#7a4e30; font-size:13px; padding-bottom:8px; vertical-align:top;">{{labelLinkedin}}</td>
-              <td style="font-size:14px; padding-bottom:8px; vertical-align:top;">
-                <a href="{{clientLinkedin}}" style="color:#c06428; text-decoration:none;">{{clientLinkedin}}</a>
-              </td>
-            </tr>
-            {{/if}}
-          </table>
-        </mj-text>
+				<!-- Booking info -->
+				<mj-text padding-bottom="20px">
+					<span
+						style="
+							color: #9e7e64;
+							font-size: 12px;
+							font-weight: 600;
+							text-transform: uppercase;
+							letter-spacing: 0.06em;
+							display: block;
+							margin-bottom: 14px;
+						"
+						>RÉSERVATION</span
+					>
+					<table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%">
+						<tr>
+							<td
+								style="
+									color: #7a4e30;
+									font-size: 13px;
+									width: 80px;
+									padding-bottom: 8px;
+									vertical-align: top;
+								"
+							>
+								{{ labelType }}
+							</td>
+							<td
+								style="font-size: 14px; font-weight: 500; padding-bottom: 8px; vertical-align: top"
+							>
+								{{ eventTypeName }}
+							</td>
+						</tr>
+						<tr>
+							<td style="color: #7a4e30; font-size: 13px; padding-bottom: 8px; vertical-align: top">
+								{{ labelDate }}
+							</td>
+							<td style="font-size: 14px; padding-bottom: 8px; vertical-align: top">{{ date }}</td>
+						</tr>
+					</table>
+				</mj-text>
 
-        <mj-divider border-color="#d4c8b4" border-width="1px" padding="4px 0 20px 0" />
+				{{#if meetLink}}
+				<mj-button
+					href="{{meetLink}}"
+					background-color="#c06428"
+					color="#faf8f4"
+					border-radius="12px"
+					font-size="14px"
+					font-weight="600"
+					inner-padding="11px 24px"
+					padding-bottom="20px"
+					align="left"
+				>
+					{{ labelMeet }} →
+				</mj-button>
+				{{/if}}
 
-        <!-- Booking info -->
-        <mj-text padding-bottom="20px">
-          <span style="color:#9e7e64; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; display:block; margin-bottom:14px;">RÉSERVATION</span>
-          <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
-            <tr>
-              <td style="color:#7a4e30; font-size:13px; width:80px; padding-bottom:8px; vertical-align:top;">{{labelType}}</td>
-              <td style="font-size:14px; font-weight:500; padding-bottom:8px; vertical-align:top;">{{eventTypeName}}</td>
-            </tr>
-            <tr>
-              <td style="color:#7a4e30; font-size:13px; padding-bottom:8px; vertical-align:top;">{{labelDate}}</td>
-              <td style="font-size:14px; padding-bottom:8px; vertical-align:top;">{{date}}</td>
-            </tr>
-          </table>
-        </mj-text>
+				{{#if brief}}
+				<mj-divider border-color="#d4c8b4" border-width="1px" padding="0 0 20px 0" />
 
-        {{#if meetLink}}
-        <mj-button href="{{meetLink}}"
-          background-color="#c06428" color="#faf8f4"
-          border-radius="12px" font-size="14px" font-weight="600"
-          inner-padding="11px 24px" padding-bottom="20px" align="left">
-          {{labelMeet}} →
-        </mj-button>
-        {{/if}}
+				<mj-text padding-bottom="0">
+					<span
+						style="
+							color: #9e7e64;
+							font-size: 12px;
+							font-weight: 600;
+							text-transform: uppercase;
+							letter-spacing: 0.06em;
+							display: block;
+							margin-bottom: 14px;
+						"
+						>{{ briefLabel }}</span
+					>
+					<table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%">
+						{{#if brief.projectDescription}}
+						<tr>
+							<td
+								style="
+									color: #7a4e30;
+									font-size: 13px;
+									width: 80px;
+									padding-bottom: 8px;
+									vertical-align: top;
+								"
+							>
+								{{ labelProject }}
+							</td>
+							<td style="font-size: 14px; padding-bottom: 8px; vertical-align: top">
+								{{ brief.projectDescription }}
+							</td>
+						</tr>
+						{{/if}}
+						{{#if brief.stack}}
+						<tr>
+							<td style="color: #7a4e30; font-size: 13px; padding-bottom: 8px; vertical-align: top">
+								{{ labelStack }}
+							</td>
+							<td style="font-size: 14px; padding-bottom: 8px; vertical-align: top">
+								{{ brief.stack }}
+							</td>
+						</tr>
+						{{/if}}
+						{{#if brief.missionType}}
+						<tr>
+							<td style="color: #7a4e30; font-size: 13px; padding-bottom: 8px; vertical-align: top">
+								{{ labelMission }}
+							</td>
+							<td style="font-size: 14px; padding-bottom: 8px; vertical-align: top">
+								{{ brief.missionType }}
+							</td>
+						</tr>
+						{{/if}}
+						{{#if brief.budget}}
+						<tr>
+							<td style="color: #7a4e30; font-size: 13px; padding-bottom: 8px; vertical-align: top">
+								{{ labelBudget }}
+							</td>
+							<td style="font-size: 14px; padding-bottom: 8px; vertical-align: top">
+								{{ brief.budget }}
+							</td>
+						</tr>
+						{{/if}}
+						{{#if brief.urgency}}
+						<tr>
+							<td style="color: #7a4e30; font-size: 13px; padding-bottom: 0; vertical-align: top">
+								{{ labelUrgency }}
+							</td>
+							<td style="font-size: 14px; padding-bottom: 0; vertical-align: top">
+								{{ brief.urgency }}
+							</td>
+						</tr>
+						{{/if}}
+					</table>
+				</mj-text>
+				{{/if}}
+			</mj-column>
+		</mj-section>
 
-        {{#if brief}}
-        <mj-divider border-color="#d4c8b4" border-width="1px" padding="0 0 20px 0" />
-
-        <mj-text padding-bottom="0">
-          <span style="color:#9e7e64; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; display:block; margin-bottom:14px;">{{briefLabel}}</span>
-          <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
-            {{#if brief.projectDescription}}
-            <tr>
-              <td style="color:#7a4e30; font-size:13px; width:80px; padding-bottom:8px; vertical-align:top;">{{labelProject}}</td>
-              <td style="font-size:14px; padding-bottom:8px; vertical-align:top;">{{brief.projectDescription}}</td>
-            </tr>
-            {{/if}}
-            {{#if brief.stack}}
-            <tr>
-              <td style="color:#7a4e30; font-size:13px; padding-bottom:8px; vertical-align:top;">{{labelStack}}</td>
-              <td style="font-size:14px; padding-bottom:8px; vertical-align:top;">{{brief.stack}}</td>
-            </tr>
-            {{/if}}
-            {{#if brief.missionType}}
-            <tr>
-              <td style="color:#7a4e30; font-size:13px; padding-bottom:8px; vertical-align:top;">{{labelMission}}</td>
-              <td style="font-size:14px; padding-bottom:8px; vertical-align:top;">{{brief.missionType}}</td>
-            </tr>
-            {{/if}}
-            {{#if brief.budget}}
-            <tr>
-              <td style="color:#7a4e30; font-size:13px; padding-bottom:8px; vertical-align:top;">{{labelBudget}}</td>
-              <td style="font-size:14px; padding-bottom:8px; vertical-align:top;">{{brief.budget}}</td>
-            </tr>
-            {{/if}}
-            {{#if brief.urgency}}
-            <tr>
-              <td style="color:#7a4e30; font-size:13px; padding-bottom:0; vertical-align:top;">{{labelUrgency}}</td>
-              <td style="font-size:14px; padding-bottom:0; vertical-align:top;">{{brief.urgency}}</td>
-            </tr>
-            {{/if}}
-          </table>
-        </mj-text>
-        {{/if}}
-
-      </mj-column>
-    </mj-section>
-
-    <!-- Footer -->
-    <mj-section padding="20px 24px 36px">
-      <mj-column>
-        <mj-text font-size="12px" color="#9e7e64" align="center" padding="0">
-          {{footer}}
-        </mj-text>
-      </mj-column>
-    </mj-section>
-
-  </mj-body>
+		<!-- Footer -->
+		<mj-section padding="20px 24px 36px">
+			<mj-column>
+				<mj-text font-size="12px" color="#9e7e64" align="center" padding="0">
+					{{ footer }}
+				</mj-text>
+			</mj-column>
+		</mj-section>
+	</mj-body>
 </mjml>

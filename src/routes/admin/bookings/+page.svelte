@@ -14,7 +14,11 @@
 	import { fade } from 'svelte/transition';
 	import { Video } from '@lucide/svelte';
 	import { formatDate, formatTime } from '$lib/utils';
-	import { getAllBookings, getBookingById, updateBookingOutcome } from '$lib/remote/bookings.remote';
+	import {
+		getAllBookings,
+		getBookingById,
+		updateBookingOutcome
+	} from '$lib/remote/bookings.remote';
 
 	const bookings = $derived(await getAllBookings());
 
@@ -175,154 +179,170 @@
 			</div>
 		{:else}
 			{#key selectedId}
-			<div class="flex flex-col gap-6" in:fade={{ duration: 150 }}>
-				<div class="flex items-start justify-between">
-					<div>
-						<h2 class="text-xl font-bold">{selected.clientName}</h2>
-						<p class="text-sm text-muted-foreground">{selected.clientEmail}</p>
-						{#if selected.clientLinkedin}
-							<a
-								href={selected.clientLinkedin}
-								target="_blank"
-								rel="noopener noreferrer"
-								class="text-xs text-primary hover:underline"
-							>
-								LinkedIn
-							</a>
-						{/if}
+				<div class="flex flex-col gap-6" in:fade={{ duration: 150 }}>
+					<div class="flex items-start justify-between">
+						<div>
+							<h2 class="text-xl font-bold">{selected.clientName}</h2>
+							<p class="text-sm text-muted-foreground">{selected.clientEmail}</p>
+							{#if selected.clientLinkedin}
+								<a
+									href={selected.clientLinkedin}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="text-xs text-primary hover:underline"
+								>
+									LinkedIn
+								</a>
+							{/if}
+						</div>
+						<Badge variant={statusBadgeVariant(selected.status)}
+							>{statusLabel(selected.status)}</Badge
+						>
 					</div>
-					<Badge variant={statusBadgeVariant(selected.status)}>{statusLabel(selected.status)}</Badge>
-				</div>
 
-				<Card.Root>
-					<Card.Header>
-						<Card.Title class="text-base">{selected.eventType.name}</Card.Title>
-					</Card.Header>
-					<Card.Content class="flex flex-col gap-1 text-sm text-muted-foreground">
-						<p>
-							{m['admin.bookings.datetime']({
-								date: formatDate(selected.startTime.toISOString()),
-								start: formatTime(selected.startTime.toISOString()),
-								end: formatTime(selected.endTime.toISOString())
-							})}
-						</p>
-						{#if selected.source}
-							<p>{m['admin.bookings.source']()} {selected.source}</p>
-						{/if}
-					</Card.Content>
-					{#if selected.meetLink}
-						<Card.Footer>
-							<Button
-								href={selected.meetLink}
-								target="_blank"
-								rel="noopener noreferrer"
-								variant="outline"
-								size="sm"
-								class="gap-2"
-							>
-								<Video class="size-3.5" />
-								Google Meet
-							</Button>
-						</Card.Footer>
-					{/if}
-				</Card.Root>
-
-				{#if selected.brief}
 					<Card.Root>
 						<Card.Header>
-							<Card.Title class="text-base">{m['admin.bookings.brief.title']()}</Card.Title>
+							<Card.Title class="text-base">{selected.eventType.name}</Card.Title>
 						</Card.Header>
-						<Card.Content class="flex flex-col gap-2 text-sm">
-							{#if selected.brief.projectDescription}
-								<p>{selected.brief.projectDescription}</p>
+						<Card.Content class="flex flex-col gap-1 text-sm text-muted-foreground">
+							<p>
+								{m['admin.bookings.datetime']({
+									date: formatDate(selected.startTime.toISOString()),
+									start: formatTime(selected.startTime.toISOString()),
+									end: formatTime(selected.endTime.toISOString())
+								})}
+							</p>
+							{#if selected.source}
+								<p>{m['admin.bookings.source']()} {selected.source}</p>
 							{/if}
-							<div class="flex flex-wrap gap-4 text-muted-foreground">
-								{#if selected.brief.stack}
-									<span>{m['admin.bookings.brief.stack']()} {selected.brief.stack}</span>
-								{/if}
-								{#if selected.brief.missionType}
-									<span>{m['admin.bookings.brief.mission']()} {missionLabel(selected.brief.missionType)}</span>
-								{/if}
-								{#if selected.brief.budget}
-									<span>{m['admin.bookings.brief.budget']()} {selected.brief.budget}</span>
-								{/if}
-								{#if selected.brief.urgency}
-									<span>{m['admin.bookings.brief.urgency']()} {urgencyLabel(selected.brief.urgency)}</span>
-								{/if}
-							</div>
 						</Card.Content>
+						{#if selected.meetLink}
+							<Card.Footer>
+								<Button
+									href={selected.meetLink}
+									target="_blank"
+									rel="noopener noreferrer"
+									variant="outline"
+									size="sm"
+									class="gap-2"
+								>
+									<Video class="size-3.5" />
+									Google Meet
+								</Button>
+							</Card.Footer>
+						{/if}
 					</Card.Root>
-				{/if}
 
-				{#if selected.insights}
-					<Card.Root>
-						<Card.Header>
-							<Card.Title class="text-base">{m['admin.bookings.insights.title']()}</Card.Title>
-							{#if selected.insights.compatibilityScore !== null}
-								<Card.Description>
-									{m['admin.bookings.insights.score']({ score: selected.insights.compatibilityScore })}
-								</Card.Description>
-							{/if}
-						</Card.Header>
-						<Card.Content class="flex flex-col gap-3 text-sm">
-							{#if selected.insights.company}
-								<div>
-									<p class="font-medium">{selected.insights.company}</p>
-									{#if selected.insights.companySector}
-										<p class="text-muted-foreground">{selected.insights.companySector}</p>
+					{#if selected.brief}
+						<Card.Root>
+							<Card.Header>
+								<Card.Title class="text-base">{m['admin.bookings.brief.title']()}</Card.Title>
+							</Card.Header>
+							<Card.Content class="flex flex-col gap-2 text-sm">
+								{#if selected.brief.projectDescription}
+									<p>{selected.brief.projectDescription}</p>
+								{/if}
+								<div class="flex flex-wrap gap-4 text-muted-foreground">
+									{#if selected.brief.stack}
+										<span>{m['admin.bookings.brief.stack']()} {selected.brief.stack}</span>
+									{/if}
+									{#if selected.brief.missionType}
+										<span
+											>{m['admin.bookings.brief.mission']()}
+											{missionLabel(selected.brief.missionType)}</span
+										>
+									{/if}
+									{#if selected.brief.budget}
+										<span>{m['admin.bookings.brief.budget']()} {selected.brief.budget}</span>
+									{/if}
+									{#if selected.brief.urgency}
+										<span
+											>{m['admin.bookings.brief.urgency']()}
+											{urgencyLabel(selected.brief.urgency)}</span
+										>
 									{/if}
 								</div>
-							{/if}
-							{#if selected.insights.aiBrief}
-								<p>{selected.insights.aiBrief}</p>
-							{/if}
-							{#if selected.insights.aiOpeningQuestion}
-								<p class="italic text-muted-foreground">"{selected.insights.aiOpeningQuestion}"</p>
-							{/if}
+							</Card.Content>
+						</Card.Root>
+					{/if}
+
+					{#if selected.insights}
+						<Card.Root>
+							<Card.Header>
+								<Card.Title class="text-base">{m['admin.bookings.insights.title']()}</Card.Title>
+								{#if selected.insights.compatibilityScore !== null}
+									<Card.Description>
+										{m['admin.bookings.insights.score']({
+											score: selected.insights.compatibilityScore
+										})}
+									</Card.Description>
+								{/if}
+							</Card.Header>
+							<Card.Content class="flex flex-col gap-3 text-sm">
+								{#if selected.insights.company}
+									<div>
+										<p class="font-medium">{selected.insights.company}</p>
+										{#if selected.insights.companySector}
+											<p class="text-muted-foreground">{selected.insights.companySector}</p>
+										{/if}
+									</div>
+								{/if}
+								{#if selected.insights.aiBrief}
+									<p>{selected.insights.aiBrief}</p>
+								{/if}
+								{#if selected.insights.aiOpeningQuestion}
+									<p class="text-muted-foreground italic">
+										"{selected.insights.aiOpeningQuestion}"
+									</p>
+								{/if}
+							</Card.Content>
+						</Card.Root>
+					{/if}
+
+					<Card.Root>
+						<Card.Header>
+							<Card.Title class="text-base">{m['admin.bookings.tracking.title']()}</Card.Title>
+						</Card.Header>
+						<Card.Content>
+							<FieldGroup>
+								<Field>
+									<FieldLabel>{m['admin.bookings.tracking.outcome']()}</FieldLabel>
+									{@const currentOutcome = selected.tracking?.outcome ?? 'pending'}
+									<Select.Root
+										type="single"
+										value={currentOutcome}
+										onValueChange={(v: string) => saveOutcome(v)}
+									>
+										<Select.Trigger class="w-full">
+											{outcomeLabel(currentOutcome)}
+										</Select.Trigger>
+										<Select.Content>
+											{#each OUTCOMES as opt}
+												<Select.Item value={opt.value}>{opt.label}</Select.Item>
+											{/each}
+										</Select.Content>
+									</Select.Root>
+								</Field>
+								<Field>
+									<FieldLabel>{m['admin.bookings.tracking.notes']()}</FieldLabel>
+									<Textarea
+										bind:value={outcomeNotes}
+										rows={3}
+										placeholder={m['admin.bookings.tracking.notes.placeholder']()}
+									/>
+								</Field>
+								<Button
+									onclick={() => saveOutcome(selected.tracking?.outcome ?? 'pending')}
+									disabled={savingOutcome}
+									class="w-full"
+								>
+									{#if savingOutcome}<Spinner class="mr-2" />{/if}
+									{m['admin.bookings.tracking.save']()}
+								</Button>
+							</FieldGroup>
 						</Card.Content>
 					</Card.Root>
-				{/if}
-
-				<Card.Root>
-					<Card.Header>
-						<Card.Title class="text-base">{m['admin.bookings.tracking.title']()}</Card.Title>
-					</Card.Header>
-					<Card.Content>
-						<FieldGroup>
-							<Field>
-								<FieldLabel>{m['admin.bookings.tracking.outcome']()}</FieldLabel>
-								{@const currentOutcome = selected.tracking?.outcome ?? 'pending'}
-							<Select.Root type="single" value={currentOutcome} onValueChange={(v: string) => saveOutcome(v)}>
-									<Select.Trigger class="w-full">
-										{outcomeLabel(currentOutcome)}
-									</Select.Trigger>
-									<Select.Content>
-										{#each OUTCOMES as opt}
-											<Select.Item value={opt.value}>{opt.label}</Select.Item>
-										{/each}
-									</Select.Content>
-								</Select.Root>
-							</Field>
-							<Field>
-								<FieldLabel>{m['admin.bookings.tracking.notes']()}</FieldLabel>
-								<Textarea
-									bind:value={outcomeNotes}
-									rows={3}
-									placeholder={m['admin.bookings.tracking.notes.placeholder']()}
-								/>
-							</Field>
-							<Button
-								onclick={() => saveOutcome(selected.tracking?.outcome ?? 'pending')}
-								disabled={savingOutcome}
-								class="w-full"
-							>
-								{#if savingOutcome}<Spinner class="mr-2" />{/if}
-								{m['admin.bookings.tracking.save']()}
-							</Button>
-						</FieldGroup>
-					</Card.Content>
-				</Card.Root>
-			</div>
+				</div>
 			{/key}
 		{/if}
 	</div>

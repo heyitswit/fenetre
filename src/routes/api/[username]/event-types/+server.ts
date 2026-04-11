@@ -1,18 +1,18 @@
-import { json } from '@sveltejs/kit'
-import { db } from '$lib/server/db'
-import { userSettings, eventTypes } from '$lib/server/db/schema'
-import { eq, and } from 'drizzle-orm'
-import type { RequestHandler } from './$types'
+import { json } from '@sveltejs/kit';
+import { db } from '$lib/server/db';
+import { userSettings, eventTypes } from '$lib/server/db/schema';
+import { eq, and } from 'drizzle-orm';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ params }) => {
 	const settings = await db
 		.select({ userId: userSettings.userId })
 		.from(userSettings)
 		.where(eq(userSettings.username, params.username))
-		.limit(1)
+		.limit(1);
 
 	if (!settings.length) {
-		return json({ error: 'User not found' }, { status: 404 })
+		return json({ error: 'User not found' }, { status: 404 });
 	}
 
 	const types = await db
@@ -25,12 +25,12 @@ export const GET: RequestHandler = async ({ params }) => {
 		})
 		.from(eventTypes)
 		.where(and(eq(eventTypes.userId, settings[0].userId), eq(eventTypes.isActive, true)))
-		.orderBy(eventTypes.sortOrder)
+		.orderBy(eventTypes.sortOrder);
 
 	return json(types, {
 		headers: { 'Access-Control-Allow-Origin': '*' }
-	})
-}
+	});
+};
 
 export async function OPTIONS() {
 	return new Response(null, {
@@ -39,5 +39,5 @@ export async function OPTIONS() {
 			'Access-Control-Allow-Methods': 'GET, OPTIONS',
 			'Access-Control-Allow-Headers': 'Content-Type'
 		}
-	})
+	});
 }

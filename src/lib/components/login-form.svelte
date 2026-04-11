@@ -46,32 +46,52 @@
 		</Card.Description>
 	</Card.Header>
 	<Card.Content>
-		<form onsubmit={(e) => { e.preventDefault(); signIn(); }}>
+		<form
+			onsubmit={(e) => {
+				e.preventDefault();
+				signIn();
+			}}
+		>
 			<FieldGroup>
 				<Field>
 					<FieldLabel for="email-{id}">{m['login.email_label']()}</FieldLabel>
-					<Input id="email-{id}" type="email" placeholder={m['login.email_placeholder']()} bind:value={email} required />
+					<Input
+						id="email-{id}"
+						type="email"
+						placeholder={m['login.email_placeholder']()}
+						bind:value={email}
+						required
+					/>
 				</Field>
 				<Field>
 					<FieldLabel for="password-{id}">{m['login.password_label']()}</FieldLabel>
-					<Input id="password-{id}" type="password" placeholder={m['login.password_placeholder']()} bind:value={password} required />
+					<Input
+						id="password-{id}"
+						type="password"
+						placeholder={m['login.password_placeholder']()}
+						bind:value={password}
+						required
+					/>
 				</Field>
 				<Button type="submit" class="w-full" disabled={loading}>
 					{#if loading}<Spinner class="mr-2" />{/if}
 					{loading ? m['login.submitting']() : m['login.submit']()}
 				</Button>
-				<a href="/forgot-password" class="block text-center text-sm text-muted-foreground hover:text-foreground">
+				<a
+					href="/forgot-password"
+					class="block text-center text-sm text-muted-foreground hover:text-foreground"
+				>
 					{m['login.forgot_password']()}
 				</a>
 			</FieldGroup>
 		</form>
 	</Card.Content>
-{#if registrationOpen}
-	<Card.Footer>
-		<p class="w-full text-center text-sm text-muted-foreground">
-			{m['login.register_link']()}
-			<a href="/register" class="text-primary hover:underline">{m['register.title']()}</a>
-		</p>
-	</Card.Footer>
-{/if}
+	{#if registrationOpen}
+		<Card.Footer>
+			<p class="w-full text-center text-sm text-muted-foreground">
+				{m['login.register_link']()}
+				<a href="/register" class="text-primary hover:underline">{m['register.title']()}</a>
+			</p>
+		</Card.Footer>
+	{/if}
 </Card.Root>

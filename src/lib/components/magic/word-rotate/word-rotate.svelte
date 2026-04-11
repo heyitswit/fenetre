@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { onMount } from "svelte";
-	import { motion, AnimatePresence, type MotionProps } from "motion-sv";
-	import { cn } from "$lib/utils";
+	import { onMount } from 'svelte';
+	import { motion, AnimatePresence, type MotionProps } from 'motion-sv';
+	import { cn } from '$lib/utils';
 
-	type ElementType = "div" | "span" | "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+	type ElementType = 'div' | 'span' | 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 
 	interface WordRotateProps {
 		words: string[];
@@ -20,10 +20,10 @@
 			initial: { opacity: 0, y: -50 },
 			animate: { opacity: 1, y: 0 },
 			exit: { opacity: 0, y: 50 },
-			transition: { duration: 0.25, ease: "easeOut" },
+			transition: { duration: 0.25, ease: 'easeOut' }
 		},
 		class: className,
-		as = "h1",
+		as = 'h1'
 	}: WordRotateProps = $props();
 
 	let MotionComponent = $derived(motion[as]);

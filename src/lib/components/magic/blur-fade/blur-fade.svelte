@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { motion, AnimatePresence, useInView, type Variants } from "motion-sv";
-	import { cn } from "$lib/utils";
-	import type { Snippet } from "svelte";
+	import { motion, AnimatePresence, useInView, type Variants } from 'motion-sv';
+	import { cn } from '$lib/utils';
+	import type { Snippet } from 'svelte';
 
 	type MarginType = string;
 
@@ -13,7 +13,7 @@
 		duration?: number;
 		delay?: number;
 		offset?: number;
-		direction?: "up" | "down" | "left" | "right";
+		direction?: 'up' | 'down' | 'left' | 'right';
 		triggerOnView?: boolean;
 		inViewMargin?: MarginType;
 		blur?: string;
@@ -28,11 +28,11 @@
 		duration = 0.4,
 		delay = 0,
 		offset = 6,
-		direction = "down",
+		direction = 'down',
 		triggerOnView = true,
-		inViewMargin = "-50px",
-		blur = "6px",
-		once = true,
+		inViewMargin = '-50px',
+		blur = '6px',
+		once = true
 	}: BlurFadeProps = $props();
 
 	let containerRef: HTMLDivElement | null = $state(null);
@@ -42,23 +42,23 @@
 			({
 				once,
 				amount: 0.1,
-				margin: inViewMargin,
+				margin: inViewMargin
 			}) as any
 	);
 
 	const defaultVariants = $derived.by(() => {
 		return {
 			hidden: {
-				[direction === "left" || direction === "right" ? "x" : "y"]:
-					direction === "right" || direction === "down" ? -offset : offset,
+				[direction === 'left' || direction === 'right' ? 'x' : 'y']:
+					direction === 'right' || direction === 'down' ? -offset : offset,
 				opacity: 0,
-				filter: `blur(${blur})`,
+				filter: `blur(${blur})`
 			},
 			visible: {
-				[direction === "left" || direction === "right" ? "x" : "y"]: 0,
+				[direction === 'left' || direction === 'right' ? 'x' : 'y']: 0,
 				opacity: 1,
-				filter: `blur(0px)`,
-			},
+				filter: `blur(0px)`
+			}
 		} as Variants;
 	});
 
@@ -70,13 +70,13 @@
 	<AnimatePresence>
 		<motion.div
 			initial="hidden"
-			animate={shouldAnimate ? "visible" : "hidden"}
-			exit={exit ? "hidden" : undefined}
+			animate={shouldAnimate ? 'visible' : 'hidden'}
+			exit={exit ? 'hidden' : undefined}
 			variants={combinedVariants}
 			transition={{
 				delay: 0.04 + delay,
 				duration,
-				ease: "easeOut",
+				ease: 'easeOut'
 			}}
 			class={cn(className)}
 		>

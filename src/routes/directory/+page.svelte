@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js'
-	import { ArrowRight } from '@lucide/svelte'
-	import { getAllUsernames } from '$lib/remote/users.remote'
-	import * as m from '$lib/paraglide/messages'
+	import { Button } from '$lib/components/ui/button/index.js';
+	import { ArrowRight } from '@lucide/svelte';
+	import { getAllUsernames } from '$lib/remote/users.remote';
+	import * as m from '$lib/paraglide/messages';
 
-	const users = $derived(await getAllUsernames())
+	const users = $derived(await getAllUsernames());
 </script>
 
 <div class="flex min-h-screen flex-col items-center px-6 py-24">

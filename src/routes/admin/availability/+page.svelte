@@ -17,7 +17,12 @@
 	let rows = $state<Row[]>([]);
 
 	$effect(() => {
-		rows = saved.map((r) => ({ dayOfWeek: r.dayOfWeek, startTime: r.startTime, endTime: r.endTime, isActive: r.isActive }));
+		rows = saved.map((r) => ({
+			dayOfWeek: r.dayOfWeek,
+			startTime: r.startTime,
+			endTime: r.endTime,
+			isActive: r.isActive
+		}));
 	});
 
 	let submitting = $state(false);
@@ -70,12 +75,14 @@
 			<Card.Root>
 				<Card.Content class="flex items-center gap-4 py-4">
 					<Switch checked={!!row} onCheckedChange={() => toggleDay(day)} />
-					<p class="w-28 capitalize font-medium">{getDayName(day)}</p>
+					<p class="w-28 font-medium capitalize">{getDayName(day)}</p>
 
 					{#if row}
 						<div class="flex items-center gap-3">
 							<div class="flex items-center gap-2">
-								<Label class="text-sm text-muted-foreground">{m['admin.availability.start']()}</Label>
+								<Label class="text-sm text-muted-foreground"
+									>{m['admin.availability.start']()}</Label
+								>
 								<Input
 									type="time"
 									value={row.startTime}

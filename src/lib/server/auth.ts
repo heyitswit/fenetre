@@ -1,13 +1,18 @@
-import { betterAuth } from 'better-auth'
-import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { sveltekitCookies } from 'better-auth/svelte-kit'
-import { admin, lastLoginMethod } from 'better-auth/plugins'
-import { ac, admin as adminRole, superadmin as superadminRole, user as userRole } from '$lib/server/permissions'
-import { env } from '$lib/server/env'
-import { getRequestEvent } from '$app/server'
-import { db } from '$lib/server/db'
-import argon2 from 'argon2'
-import { sendPasswordReset } from '$lib/server/resend'
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { sveltekitCookies } from 'better-auth/svelte-kit';
+import { admin, lastLoginMethod } from 'better-auth/plugins';
+import {
+	ac,
+	admin as adminRole,
+	superadmin as superadminRole,
+	user as userRole
+} from '$lib/server/permissions';
+import { env } from '$lib/server/env';
+import { getRequestEvent } from '$app/server';
+import { db } from '$lib/server/db';
+import argon2 from 'argon2';
+import { sendPasswordReset } from '$lib/server/resend';
 
 export const auth = betterAuth({
 	baseURL: env.ORIGIN,
@@ -20,7 +25,7 @@ export const auth = betterAuth({
 			verify: ({ hash, password }) => argon2.verify(hash, password)
 		},
 		sendResetPassword: async ({ user, url }) => {
-			await sendPasswordReset(user.email, url)
+			await sendPasswordReset(user.email, url);
 		}
 	},
 	socialProviders: {},
@@ -48,4 +53,4 @@ export const auth = betterAuth({
 		lastLoginMethod(),
 		sveltekitCookies(getRequestEvent)
 	]
-})
+});

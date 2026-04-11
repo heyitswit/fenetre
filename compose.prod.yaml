@@ -2,7 +2,7 @@ services:
   app:
     image: ${DOCKER_IMAGE:-fenetre-app}:${DOCKER_TAG:-latest}
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       DATABASE_URL:
       ORIGIN:
@@ -22,7 +22,13 @@ services:
       HUNTER_API_KEY:
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "bun", "--eval", "const r = await fetch('http://0.0.0.0:9000/'); if (!r.ok) process.exit(1)"]
+      test:
+        [
+          'CMD',
+          'bun',
+          '--eval',
+          "const r = await fetch('http://0.0.0.0:9000/'); if (!r.ok) process.exit(1)"
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

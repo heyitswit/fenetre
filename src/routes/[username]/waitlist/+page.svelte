@@ -1,35 +1,35 @@
 <script lang="ts">
-	import { page } from '$app/state'
-	import { toast } from 'svelte-sonner'
-	import * as m from '$lib/paraglide/messages'
-	import { Button } from '$lib/components/ui/button/index.js'
-	import { Input } from '$lib/components/ui/input/index.js'
-	import * as Card from '$lib/components/ui/card/index.js'
-	import { Field, FieldGroup, FieldLabel } from '$lib/components/ui/field/index.js'
-	import { Spinner } from '$lib/components/ui/spinner/index.js'
-	import { joinWaitlist } from '$lib/remote/waitlist.remote'
-	import type { PageProps } from './$types'
+	import { page } from '$app/state';
+	import { toast } from 'svelte-sonner';
+	import * as m from '$lib/paraglide/messages';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
+	import * as Card from '$lib/components/ui/card/index.js';
+	import { Field, FieldGroup, FieldLabel } from '$lib/components/ui/field/index.js';
+	import { Spinner } from '$lib/components/ui/spinner/index.js';
+	import { joinWaitlist } from '$lib/remote/waitlist.remote';
+	import type { PageProps } from './$types';
 
-	let { params }: PageProps = $props()
+	let { params }: PageProps = $props();
 
-	const username = $derived(params.username)
-	const eventSlug = $derived(page.url.searchParams.get('event') ?? '')
+	const username = $derived(params.username);
+	const eventSlug = $derived(page.url.searchParams.get('event') ?? '');
 
-	let email = $state('')
-	let name = $state('')
-	let submitted = $state(false)
-	let loading = $state(false)
+	let email = $state('');
+	let name = $state('');
+	let submitted = $state(false);
+	let loading = $state(false);
 
 	async function handleSubmit() {
-		if (!email) return
-		loading = true
+		if (!email) return;
+		loading = true;
 		try {
-			await joinWaitlist({ username, eventTypeSlug: eventSlug, email, name: name || undefined })
-			submitted = true
+			await joinWaitlist({ username, eventTypeSlug: eventSlug, email, name: name || undefined });
+			submitted = true;
 		} catch {
-			toast.error(m['booking.error.generic']())
+			toast.error(m['booking.error.generic']());
 		} finally {
-			loading = false
+			loading = false;
 		}
 	}
 </script>
@@ -52,7 +52,12 @@
 				<Card.Description>{m['waitlist.description']()}</Card.Description>
 			</Card.Header>
 			<Card.Content>
-				<form onsubmit={(e) => { e.preventDefault(); handleSubmit() }}>
+				<form
+					onsubmit={(e) => {
+						e.preventDefault();
+						handleSubmit();
+					}}
+				>
 					<FieldGroup>
 						<Field>
 							<FieldLabel for="email">{m['waitlist.email']()}</FieldLabel>

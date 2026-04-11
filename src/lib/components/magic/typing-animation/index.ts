@@ -1,2 +1,2 @@
-import TypingAnimation from "./typing-animation.svelte";
+import TypingAnimation from './typing-animation.svelte';
 export { TypingAnimation };

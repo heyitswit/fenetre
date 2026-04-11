@@ -1,36 +1,41 @@
-import { Resend } from 'resend'
-import ical from 'ical-generator'
-import { env } from '$lib/server/env'
-import { confirmationEmail, reminderEmail, notificationEmail, passwordResetEmail } from '$lib/server/emails'
-import type { Locale } from '$lib/paraglide/runtime'
-import type { InferSelectModel } from 'drizzle-orm'
-import type { bookings, eventTypes, briefs } from '$lib/server/db/schema'
+import { Resend } from 'resend';
+import ical from 'ical-generator';
+import { env } from '$lib/server/env';
+import {
+	confirmationEmail,
+	reminderEmail,
+	notificationEmail,
+	passwordResetEmail
+} from '$lib/server/emails';
+import type { Locale } from '$lib/paraglide/runtime';
+import type { InferSelectModel } from 'drizzle-orm';
+import type { bookings, eventTypes, briefs } from '$lib/server/db/schema';
 
-type Booking = InferSelectModel<typeof bookings>
-type EventType = InferSelectModel<typeof eventTypes>
-type Brief = InferSelectModel<typeof briefs>
+type Booking = InferSelectModel<typeof bookings>;
+type EventType = InferSelectModel<typeof eventTypes>;
+type Brief = InferSelectModel<typeof briefs>;
 
 export interface BookingWithRelations extends Booking {
-	eventType: EventType
-	brief: Brief | null
+	eventType: EventType;
+	brief: Brief | null;
 }
 
-const resend = new Resend(env.RESEND_API_KEY)
-const FROM = env.RESEND_FROM_EMAIL
+const resend = new Resend(env.RESEND_API_KEY);
+const FROM = env.RESEND_FROM_EMAIL;
 
 function generateIcs(booking: BookingWithRelations): string {
-	const cal = ical({ name: 'fenetre' })
+	const cal = ical({ name: 'fenetre' });
 	const event = cal.createEvent({
 		id: `${booking.id}@fenetre`,
 		start: booking.startTime,
 		end: booking.endTime,
 		summary: booking.eventType.name
-	})
+	});
 	if (booking.meetLink) {
-		event.url(booking.meetLink)
-		event.location(booking.meetLink)
+		event.url(booking.meetLink);
+		event.location(booking.meetLink);
 	}
-	return cal.toString()
+	return cal.toString();
 }
 
 export async function sendConfirmationToClient(booking: BookingWithRelations): Promise<void> {
@@ -42,7 +47,7 @@ export async function sendConfirmationToClient(booking: BookingWithRelations): P
 		meetLink: booking.meetLink ?? null,
 		rescheduleUrl: `${env.ORIGIN}/reschedule/${booking.rescheduleToken}`,
 		locale: booking.locale as Locale
-	})
+	});
 
 	await resend.emails.send({
 		from: FROM,
@@ -50,7 +55,7 @@ export async function sendConfirmationToClient(booking: BookingWithRelations): P
 		subject,
 		html,
 		attachments: [{ filename: 'rendez-vous.ics', content: generateIcs(booking) }]
-	})
+	});
 }
 
 export async function sendNotificationToFreelance(
@@ -67,19 +72,19 @@ export async function sendNotificationToFreelance(
 		meetLink: booking.meetLink ?? null,
 		locale: booking.locale as Locale,
 		brief: booking.brief ?? null
-	})
+	});
 
 	await resend.emails.send({
 		from: FROM,
 		to: notificationEmailAddress ?? FROM,
 		subject,
 		html
-	})
+	});
 }
 
 export async function sendPasswordReset(email: string, resetUrl: string): Promise<void> {
-	const { subject, html } = passwordResetEmail(resetUrl)
-	await resend.emails.send({ from: FROM, to: email, subject, html })
+	const { subject, html } = passwordResetEmail(resetUrl);
+	await resend.emails.send({ from: FROM, to: email, subject, html });
 }
 
 export async function sendReminderToClient(booking: BookingWithRelations): Promise<void> {
@@ -90,12 +95,12 @@ export async function sendReminderToClient(booking: BookingWithRelations): Promi
 		meetLink: booking.meetLink ?? null,
 		rescheduleUrl: `${env.ORIGIN}/reschedule/${booking.rescheduleToken}`,
 		locale: booking.locale as Locale
-	})
+	});
 
 	await resend.emails.send({
 		from: FROM,
 		to: booking.clientEmail,
 		subject,
 		html
-	})
+	});
 }

@@ -1,25 +1,32 @@
 <script lang="ts">
-	import * as m from '$lib/paraglide/messages'
-	import { Button } from '$lib/components/ui/button/index.js'
-	import * as Card from '$lib/components/ui/card/index.js'
-	import { Input } from '$lib/components/ui/input/index.js'
-	import { Field, FieldGroup, FieldLabel } from '$lib/components/ui/field/index.js'
-	import { Spinner } from '$lib/components/ui/spinner/index.js'
-	import { authClient } from '$lib/auth-client'
-	import { ArrowLeft } from '@lucide/svelte'
+	import * as m from '$lib/paraglide/messages';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Card from '$lib/components/ui/card/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
+	import { Field, FieldGroup, FieldLabel } from '$lib/components/ui/field/index.js';
+	import { Spinner } from '$lib/components/ui/spinner/index.js';
+	import { authClient } from '$lib/auth-client';
+	import { ArrowLeft } from '@lucide/svelte';
 
-	let email = $state('')
-	let loading = $state(false)
-	let sent = $state(false)
+	let email = $state('');
+	let loading = $state(false);
+	let sent = $state(false);
 
 	async function submit() {
-		if (!email) return
-		loading = true
+		if (!email) return;
+		loading = true;
 		await authClient.requestPasswordReset(
 			{ email, redirectTo: '/reset-password' },
-			{ onSuccess: () => { sent = true }, onError: () => { sent = true } }
-		)
-		loading = false
+			{
+				onSuccess: () => {
+					sent = true;
+				},
+				onError: () => {
+					sent = true;
+				}
+			}
+		);
+		loading = false;
 	}
 </script>
 
@@ -34,11 +41,22 @@
 			{#if sent}
 				<p class="text-sm text-muted-foreground">{m['forgot_password.success']()}</p>
 			{:else}
-				<form onsubmit={(e) => { e.preventDefault(); submit() }}>
+				<form
+					onsubmit={(e) => {
+						e.preventDefault();
+						submit();
+					}}
+				>
 					<FieldGroup>
 						<Field>
 							<FieldLabel for="fp-email">{m['login.email_label']()}</FieldLabel>
-							<Input id="fp-email" type="email" placeholder={m['login.email_placeholder']()} bind:value={email} required />
+							<Input
+								id="fp-email"
+								type="email"
+								placeholder={m['login.email_placeholder']()}
+								bind:value={email}
+								required
+							/>
 						</Field>
 						<Button type="submit" class="w-full" disabled={loading}>
 							{#if loading}<Spinner class="mr-2" />{/if}
@@ -49,7 +67,10 @@
 			{/if}
 		</Card.Content>
 		<Card.Footer>
-			<a href="/login" class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+			<a
+				href="/login"
+				class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+			>
 				<ArrowLeft class="size-4" />
 				{m['forgot_password.back']()}
 			</a>

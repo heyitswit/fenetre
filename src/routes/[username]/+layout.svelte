@@ -11,7 +11,7 @@
 {@render children()}
 
 {#if !embed}
-	<div class="fixed bottom-4 right-4 flex items-center gap-1">
+	<div class="fixed right-4 bottom-4 flex items-center gap-1">
 		<LanguageSelector />
 		<ThemeToggle class="h-8 w-8" />
 	</div>

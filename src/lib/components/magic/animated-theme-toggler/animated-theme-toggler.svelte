@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { onMount } from "svelte";
-	import { Moon, Sun } from "@lucide/svelte";
-	import { cn } from "$lib/utils";
+	import { onMount } from 'svelte';
+	import { Moon, Sun } from '@lucide/svelte';
+	import { cn } from '$lib/utils';
 
 	interface AnimatedThemeTogglerProps {
 		class?: string;
@@ -15,7 +15,7 @@
 
 	onMount(() => {
 		const updateTheme = () => {
-			isDark = document.documentElement.classList.contains("dark");
+			isDark = document.documentElement.classList.contains('dark');
 		};
 
 		updateTheme();
@@ -23,7 +23,7 @@
 		const observer = new MutationObserver(updateTheme);
 		observer.observe(document.documentElement, {
 			attributes: true,
-			attributeFilter: ["class"],
+			attributeFilter: ['class']
 		});
 
 		return () => observer.disconnect();
@@ -37,16 +37,16 @@
 			// Fallback for browsers that don't support View Transition API
 			const newTheme = !isDark;
 			isDark = newTheme;
-			document.documentElement.classList.toggle("dark");
-			localStorage.setItem("theme", newTheme ? "dark" : "light");
+			document.documentElement.classList.toggle('dark');
+			localStorage.setItem('theme', newTheme ? 'dark' : 'light');
 			return;
 		}
 
 		await document.startViewTransition(() => {
 			const newTheme = !isDark;
 			isDark = newTheme;
-			document.documentElement.classList.toggle("dark");
-			localStorage.setItem("theme", newTheme ? "dark" : "light");
+			document.documentElement.classList.toggle('dark');
+			localStorage.setItem('theme', newTheme ? 'dark' : 'light');
 		}).ready;
 
 		const { top, left, width, height } = buttonRef.getBoundingClientRect();
@@ -59,15 +59,12 @@
 
 		document.documentElement.animate(
 			{
-				clipPath: [
-					`circle(0px at ${x}px ${y}px)`,
-					`circle(${maxRadius}px at ${x}px ${y}px)`,
-				],
+				clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${maxRadius}px at ${x}px ${y}px)`]
 			},
 			{
 				duration,
-				easing: "ease-in-out",
-				pseudoElement: "::view-transition-new(root)",
+				easing: 'ease-in-out',
+				pseudoElement: '::view-transition-new(root)'
 			}
 		);
 	};
