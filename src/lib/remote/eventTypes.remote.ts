@@ -2,33 +2,20 @@ import { query, command } from '$app/server';
 import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { eventTypes } from '$lib/server/db/schema';
-import { requireAuth, userIdByUsername } from '$lib/server/remote-helpers';
+import { requireAuth } from '$lib/server/remote-helpers';
+import { invalidateForUser } from '$lib/server/event-types-cache';
+import { loadActiveEventTypes, loadEventTypeBySlug } from '$lib/server/public-queries';
 import { and, asc, eq } from 'drizzle-orm';
 import * as z from 'zod';
 
 export const getActiveEventTypes = query(
 	z.object({ username: z.string() }),
-	async ({ username }) => {
-		const userId = await userIdByUsername(username);
-		return db
-			.select()
-			.from(eventTypes)
-			.where(and(eq(eventTypes.userId, userId), eq(eventTypes.isActive, true)))
-			.orderBy(asc(eventTypes.sortOrder));
-	}
+	async ({ username }) => loadActiveEventTypes(username)
 );
 
 export const getEventTypeBySlug = query(
 	z.object({ username: z.string(), slug: z.string() }),
-	async ({ username, slug }) => {
-		const userId = await userIdByUsername(username);
-		const [et] = await db
-			.select()
-			.from(eventTypes)
-			.where(and(eq(eventTypes.userId, userId), eq(eventTypes.slug, slug)))
-			.limit(1);
-		return et ?? null;
-	}
+	async ({ username, slug }) => loadEventTypeBySlug(username, slug)
 );
 
 export const getAllEventTypes = query(async () => {
@@ -55,6 +42,7 @@ export const createEventType = command(
 			.insert(eventTypes)
 			.values({ ...input, userId: user.id })
 			.returning();
+		invalidateForUser(user.id);
 		void getAllEventTypes().refresh();
 		return et;
 	}
@@ -80,6 +68,7 @@ export const updateEventType = command(
 			.where(and(eq(eventTypes.id, id), eq(eventTypes.userId, user.id)))
 			.returning();
 		if (!et) error(404, 'Event type not found');
+		invalidateForUser(user.id);
 		void getAllEventTypes().refresh();
 		return et;
 	}
@@ -90,6 +79,7 @@ export const setBusyModeAll = command(
 	async ({ isBusyMode }) => {
 		const user = requireAuth();
 		await db.update(eventTypes).set({ isBusyMode }).where(eq(eventTypes.userId, user.id));
+		invalidateForUser(user.id);
 		void getAllEventTypes().refresh();
 		return { ok: true };
 	}

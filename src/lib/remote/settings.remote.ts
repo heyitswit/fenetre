@@ -3,6 +3,7 @@ import { db } from '$lib/server/db';
 import type { PortfolioLink } from '$lib/server/db/schema';
 import { userSettings } from '$lib/server/db/schema';
 import { requireAuth } from '$lib/server/remote-helpers';
+import { loadPublicPortfolioLinks } from '$lib/server/public-queries';
 import { eq } from 'drizzle-orm';
 import * as z from 'zod';
 
@@ -23,13 +24,7 @@ export const getSettings = query(async () => {
 
 export const getPublicPortfolioLinks = query(
 	z.object({ username: z.string() }),
-	async ({ username }) => {
-		const [row] = await db
-			.select({ portfolioLinks: userSettings.portfolioLinks })
-			.from(userSettings)
-			.where(eq(userSettings.username, username));
-		return row?.portfolioLinks ?? [];
-	}
+	async ({ username }) => loadPublicPortfolioLinks(username)
 );
 
 const PortfolioLinkSchema = z.object({

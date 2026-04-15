@@ -1,13 +1,19 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/server/db';
 import { bookings, briefs, eventTypes, userSettings } from '$lib/server/db/schema';
-import { createCalendarEvent, deleteCalendarEvent, updateCalendarEvent } from '$lib/server/google';
+import { loadBookingConfirmation, loadBookingByToken } from '$lib/server/public-queries';
+import {
+	createCalendarEvent,
+	deleteCalendarEvent,
+	invalidateBusySlotsCache,
+	updateCalendarEvent
+} from '$lib/server/google';
 import { sendConfirmationToClient, sendNotificationToFreelance } from '$lib/server/resend';
 import { bookingLimiter, formLimiter } from '$lib/server/limiter';
 import { requireAuth } from '$lib/server/remote-helpers';
 import { getLocale } from '$lib/paraglide/runtime';
 import { error } from '@sveltejs/kit';
-import { and, count, desc, eq, gte, lt, ne } from 'drizzle-orm';
+import { and, count, desc, eq, getTableColumns, gt, gte, lt, ne } from 'drizzle-orm';
 import * as z from 'zod';
 
 export const getUpcomingBookings = query(async () => {
@@ -70,40 +76,15 @@ export const getAllBookings = query(async () => {
 	});
 });
 
-export const getBookingConfirmation = query(z.object({ id: z.string().uuid() }), async ({ id }) => {
-	const booking = await db.query.bookings.findFirst({
-		where: eq(bookings.id, id),
-		with: { eventType: true, brief: true }
-	});
-	if (!booking) error(404, 'Booking not found');
-	return {
-		id: booking.id,
-		clientName: booking.clientName,
-		startTime: booking.startTime.toISOString(),
-		endTime: booking.endTime.toISOString(),
-		meetLink: booking.meetLink,
-		missionType: booking.brief?.missionType ?? null,
-		eventType: {
-			name: booking.eventType.name,
-			duration: booking.eventType.duration
-		}
-	};
-});
+export const getBookingConfirmation = query(
+	z.object({ id: z.string().uuid() }),
+	async ({ id }) => loadBookingConfirmation(id)
+);
 
-export const getBookingByToken = query(z.object({ token: z.string() }), async ({ token }) => {
-	const booking = await db.query.bookings.findFirst({
-		where: and(eq(bookings.rescheduleToken, token), ne(bookings.status, 'cancelled')),
-		with: { eventType: true, brief: true }
-	});
-	if (!booking) error(404, 'Booking not found');
-
-	const [settings] = await db
-		.select({ username: userSettings.username })
-		.from(userSettings)
-		.where(eq(userSettings.userId, booking.userId));
-
-	return { ...booking, username: settings?.username ?? null };
-});
+export const getBookingByToken = query(
+	z.object({ token: z.string() }),
+	async ({ token }) => loadBookingByToken(token)
+);
 
 export const getBookingById = query(z.object({ id: z.string().uuid() }), async ({ id }) => {
 	const user = requireAuth();
@@ -145,76 +126,102 @@ export const createBooking = command(
 	}),
 	async (input) => {
 		if (await bookingLimiter.isLimited(getRequestEvent())) error(429, 'Too many requests');
-		const [settingsRow] = await db
-			.select({ userId: userSettings.userId, notificationEmail: userSettings.notificationEmail })
-			.from(userSettings)
-			.where(eq(userSettings.username, input.username));
 
-		if (!settingsRow) error(404, 'User not found');
-
-		const { userId } = settingsRow;
-
-		const [eventType] = await db
-			.select()
+		const [row] = await db
+			.select({
+				...getTableColumns(eventTypes),
+				notificationEmail: userSettings.notificationEmail,
+				bufferMinutes: userSettings.bufferMinutes
+			})
 			.from(eventTypes)
-			.where(and(eq(eventTypes.userId, userId), eq(eventTypes.slug, input.eventTypeSlug)))
+			.innerJoin(userSettings, eq(eventTypes.userId, userSettings.userId))
+			.where(and(eq(userSettings.username, input.username), eq(eventTypes.slug, input.eventTypeSlug)))
 			.limit(1);
 
-		if (!eventType) error(400, 'Event type not found');
+		if (!row) error(404, 'Event type not found');
 
+		const { userId, notificationEmail, bufferMinutes } = row;
 		const startTime = new Date(input.startTime);
-		const endTime = new Date(startTime.getTime() + eventType.duration * 60_000);
+		const endTime = new Date(startTime.getTime() + row.duration * 60_000);
 		const rescheduleToken = crypto.randomUUID();
+		const locale = getLocale();
 
-		const [booking] = await db
-			.insert(bookings)
-			.values({
-				userId,
-				eventTypeId: eventType.id,
-				clientName: input.clientName,
-				clientEmail: input.clientEmail,
-				clientLinkedin: input.clientLinkedin,
-				startTime,
-				endTime,
-				source: input.source ?? 'direct',
-				rescheduleToken,
-				locale: getLocale()
-			})
-			.returning();
+		const [booking] = await db.transaction(async (tx) => {
+			const [conflict] = await tx
+				.select({ id: bookings.id })
+				.from(bookings)
+				.where(
+					and(
+						eq(bookings.userId, userId),
+						ne(bookings.status, 'cancelled'),
+						gt(bookings.endTime, new Date(startTime.getTime() - bufferMinutes * 60_000)),
+						lt(bookings.startTime, new Date(endTime.getTime() + bufferMinutes * 60_000))
+					)
+				)
+				.limit(1);
 
-		const [{ eventId: googleEventId, meetLink }] = await Promise.all([
-			createCalendarEvent(userId, {
-				summary: `${eventType.name} — ${input.clientName}`,
-				description: 'Booked via fenêtre',
-				startTime,
-				endTime,
-				attendeeEmail: input.clientEmail
-			}),
-			db.update(briefs).set({ bookingId: booking.id }).where(eq(briefs.id, input.briefId))
-		]);
+			if (conflict) error(409, 'Slot no longer available');
 
-		await db.update(bookings).set({ googleEventId, meetLink }).where(eq(bookings.id, booking.id));
-
-		const fullBooking = await db.query.bookings.findFirst({
-			where: eq(bookings.id, booking.id),
-			with: { eventType: true, brief: true }
+			return tx
+				.insert(bookings)
+				.values({
+					userId,
+					eventTypeId: row.id,
+					clientName: input.clientName,
+					clientEmail: input.clientEmail,
+					clientLinkedin: input.clientLinkedin,
+					startTime,
+					endTime,
+					source: input.source ?? 'direct',
+					rescheduleToken,
+					locale
+				})
+				.returning();
 		});
-		if (!fullBooking) error(500, 'Failed to retrieve booking');
 
-		await Promise.all([
-			sendConfirmationToClient(fullBooking),
-			sendNotificationToFreelance(fullBooking, settingsRow.notificationEmail ?? undefined)
-		]);
+		invalidateBusySlotsCache(userId);
 
-		const companyName = fullBooking.brief?.companyName;
-		if (companyName) {
-			const { enrichFromPappers } = await import('$lib/server/pappers');
-			void enrichFromPappers(companyName, booking.id).catch((err) => {
-				console.error('Pappers enrichment failed for booking', booking.id, err);
-			});
-		}
+		void (async () => {
+			try {
+				await db.update(briefs).set({ bookingId: booking.id }).where(eq(briefs.id, input.briefId));
 
-		return { bookingId: booking.id, eventSlug: eventType.slug };
+				const { eventId: googleEventId, meetLink } = await createCalendarEvent(userId, {
+					summary: `${row.name} — ${input.clientName}`,
+					description: 'Booked via fenêtre',
+					startTime,
+					endTime,
+					attendeeEmail: input.clientEmail
+				});
+
+				await db
+					.update(bookings)
+					.set({ googleEventId, meetLink })
+					.where(eq(bookings.id, booking.id));
+
+				const fullBooking = await db.query.bookings.findFirst({
+					where: eq(bookings.id, booking.id),
+					with: { eventType: true, brief: true }
+				});
+				if (!fullBooking) return;
+
+				await Promise.all([
+					sendConfirmationToClient(fullBooking),
+					sendNotificationToFreelance(fullBooking, notificationEmail ?? undefined)
+				]);
+
+				const companyName = fullBooking.brief?.companyName;
+				if (companyName) {
+					const { enrichFromPappers } = await import('$lib/server/pappers');
+					void enrichFromPappers(companyName, booking.id).catch((err) => {
+						console.error('Pappers enrichment failed for booking', booking.id, err);
+					});
+				}
+			} catch (err) {
+				console.error('Post-booking tasks failed for booking', booking.id, err);
+			}
+		})();
+
+		return { bookingId: booking.id, eventSlug: row.slug };
 	}
 );
 
@@ -233,31 +240,56 @@ export const rescheduleBooking = command(
 		const newEnd = new Date(newStart.getTime() + booking.eventType.duration * 60_000);
 		const newToken = crypto.randomUUID();
 
-		await db
-			.update(bookings)
-			.set({
-				startTime: newStart,
-				endTime: newEnd,
-				status: 'confirmed',
-				rescheduleToken: newToken,
-				reminderSentAt: null
-			})
-			.where(eq(bookings.id, booking.id));
+		const [settingsRow] = await db
+			.select({ bufferMinutes: userSettings.bufferMinutes })
+			.from(userSettings)
+			.where(eq(userSettings.userId, booking.userId));
 
-		if (booking.googleEventId) {
-			await updateCalendarEvent(booking.userId, booking.googleEventId, {
-				startTime: newStart,
-				endTime: newEnd
-			});
-		}
+		await db.transaction(async (tx) => {
+			const [conflict] = await tx
+				.select({ id: bookings.id })
+				.from(bookings)
+				.where(
+					and(
+						eq(bookings.userId, booking.userId),
+						ne(bookings.status, 'cancelled'),
+						ne(bookings.id, booking.id),
+						gt(bookings.endTime, new Date(newStart.getTime() - (settingsRow?.bufferMinutes ?? 0) * 60_000)),
+						lt(bookings.startTime, new Date(newEnd.getTime() + (settingsRow?.bufferMinutes ?? 0) * 60_000))
+					)
+				)
+				.limit(1);
 
-		const updated = await db.query.bookings.findFirst({
-			where: eq(bookings.id, booking.id),
-			with: { eventType: true, brief: true }
+			if (conflict) error(409, 'Slot no longer available');
+
+			await tx
+				.update(bookings)
+				.set({ startTime: newStart, endTime: newEnd, status: 'confirmed', rescheduleToken: newToken, reminderSentAt: null })
+				.where(eq(bookings.id, booking.id));
 		});
-		if (!updated) error(500, 'Failed to retrieve booking');
 
-		await sendConfirmationToClient(updated);
+		invalidateBusySlotsCache(booking.userId);
+
+		void (async () => {
+			try {
+				if (booking.googleEventId) {
+					await updateCalendarEvent(booking.userId, booking.googleEventId, {
+						startTime: newStart,
+						endTime: newEnd
+					});
+				}
+
+				const updated = await db.query.bookings.findFirst({
+					where: eq(bookings.id, booking.id),
+					with: { eventType: true, brief: true }
+				});
+				if (!updated) return;
+
+				await sendConfirmationToClient(updated);
+			} catch (err) {
+				console.error('Post-reschedule tasks failed for booking', booking.id, err);
+			}
+		})();
 
 		return { bookingId: booking.id };
 	}
