@@ -20,7 +20,11 @@ const envSchema = z.object({
 	// Set to 'true' to allow public registration (admin controls it otherwise)
 	REGISTRATION_OPEN: z.string().optional().default('false'),
 	// Pappers — French company enrichment (optional)
-	PAPPERS_API_KEY: z.string().optional()
+	PAPPERS_API_KEY: z.string().optional(),
+	// OpenAI — AI brief generation (optional)
+	OPENAI_API_KEY: z.string().optional(),
+	OPENAI_URL: z.string().optional(),
+	OPENAI_MODEL: z.string().optional().default('gpt-4o-mini')
 });
 
 export const env = envSchema
