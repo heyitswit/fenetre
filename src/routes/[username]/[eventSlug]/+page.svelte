@@ -11,6 +11,8 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Spinner } from '$lib/components/ui/spinner/index.js';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
+	import CompanyAutocomplete from '$lib/components/booking/CompanyAutocomplete.svelte';
+	import { getEnabledFields } from '$lib/form-fields';
 	import * as m from '$lib/paraglide/messages';
 	import { getLocale } from '$lib/paraglide/runtime';
 	import { createBooking, saveBrief } from '$lib/remote/bookings.remote';
@@ -30,6 +32,7 @@
 
 	const eventType = $derived(data.eventType);
 	const slots = $derived(data.slots);
+	const effectiveFields = $derived(getEnabledFields(eventType?.formFields ?? null));
 
 	const locale = $derived(getLocale());
 	const availableDays = $derived(new Set(Object.keys(slots)));
@@ -46,20 +49,30 @@
 	let selectedSlot = $state<{ start: string; end: string } | null>(null);
 	let submitting = $state(false);
 
+	// Always-shown fields
 	let email = $state('');
 	let name = $state('');
-	let companyName = $state('');
-	let projectDescription = $state('');
-	let stack = $state('');
-	let missionType = $state('courte');
-	let budget = $state('');
-	let urgency = $state('normal');
-	let linkedin = $state('');
+
+	// Dynamic form values — keyed by field.key
+	function initValues(): Record<string, string> {
+		const vals: Record<string, string> = {};
+		for (const field of getEnabledFields(data.eventType?.formFields ?? null)) {
+			if ((field.type === 'radio' || field.type === 'select') && field.options?.length) {
+				vals[field.key] = field.options[0].value;
+			} else {
+				vals[field.key] = '';
+			}
+		}
+		return vals;
+	}
+	let values = $state<Record<string, string>>(initValues());
+
+	// Pappers: siren from autocomplete selection
+	let selectedSiren = $state<string | null>(null);
 
 	const selectedDaySlots = $derived(selectedDate ? (slots[selectedDate.toString()] ?? []) : []);
 
 	$effect(() => {
-		// Reset slot when day changes
 		if (selectedDate) selectedSlot = null;
 	});
 
@@ -67,8 +80,18 @@
 		return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
 	}
 
+	const BUILT_IN_KEYS = new Set([
+		'companyName',
+		'projectDescription',
+		'stack',
+		'missionType',
+		'budget',
+		'urgency',
+		'linkedin'
+	]);
+
 	async function submitBrief() {
-		if (!email || !projectDescription) {
+		if (!email) {
 			toast.error(m['booking.error.required_fields']());
 			return;
 		}
@@ -76,16 +99,31 @@
 			toast.error(m['booking.error.invalid_email']());
 			return;
 		}
+
+		const missingRequired = effectiveFields.filter((f) => f.required && !values[f.key]?.trim());
+		if (missingRequired.length > 0) {
+			toast.error(m['booking.error.required_fields']());
+			return;
+		}
+
 		submitting = true;
 		try {
+			// Separate custom fields from built-in ones
+			const customFields: Record<string, string> = {};
+			for (const [k, v] of Object.entries(values)) {
+				if (!BUILT_IN_KEYS.has(k) && v) customFields[k] = v;
+			}
+
 			const result = await saveBrief({
 				clientEmail: email,
-				companyName: companyName || undefined,
-				projectDescription,
-				stack: stack || undefined,
-				missionType,
-				budget: budget || undefined,
-				urgency
+				companyName: values['companyName'] || undefined,
+				projectDescription: values['projectDescription'] || undefined,
+				stack: values['stack'] || undefined,
+				missionType: values['missionType'] || undefined,
+				budget: values['budget'] || undefined,
+				urgency: values['urgency'] || undefined,
+				customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
+				companySiren: selectedSiren || undefined
 			});
 			briefId = result.briefId;
 			step = 'calendar';
@@ -112,7 +150,7 @@
 				startTime: selectedSlot.start,
 				clientName: name,
 				clientEmail: email,
-				clientLinkedin: linkedin || undefined,
+				clientLinkedin: values['linkedin'] || undefined,
 				source
 			});
 			goto(
@@ -164,6 +202,7 @@
 					}}
 				>
 					<FieldGroup>
+						<!-- Email: always shown -->
 						<Field>
 							<FieldLabel for="email">{m['brief.email']()}</FieldLabel>
 							<Input
@@ -174,83 +213,87 @@
 								required
 							/>
 						</Field>
-						<Field>
-							<FieldLabel for="company">
-								{m['brief.company']()}
-								<span class="text-muted-foreground">({m['booking.optional']()})</span>
-							</FieldLabel>
-							<Input
-								id="company"
-								bind:value={companyName}
-								placeholder={m['brief.company.placeholder']()}
-							/>
-						</Field>
-						<Field>
-							<FieldLabel for="project">{m['brief.project']()}</FieldLabel>
-							<Textarea
-								id="project"
-								bind:value={projectDescription}
-								placeholder={m['brief.project.placeholder']()}
-								rows={4}
-								required
-							/>
-						</Field>
-						<Field>
-							<FieldLabel for="stack">{m['brief.stack']()}</FieldLabel>
-							<Input id="stack" bind:value={stack} placeholder={m['brief.stack.placeholder']()} />
-						</Field>
-						<Field>
-							<FieldLabel>{m['brief.mission']()}</FieldLabel>
-							<RadioGroup bind:value={missionType} class="mt-1 flex flex-col gap-2">
-								<div class="flex items-center gap-2">
-									<RadioGroupItem value="courte" id="courte" />
-									<FieldLabel for="courte">{m['brief.mission.courte']()}</FieldLabel>
-								</div>
-								<div class="flex items-center gap-2">
-									<RadioGroupItem value="longue" id="longue" />
-									<FieldLabel for="longue">{m['brief.mission.longue']()}</FieldLabel>
-								</div>
-								<div class="flex items-center gap-2">
-									<RadioGroupItem value="conseil" id="conseil" />
-									<FieldLabel for="conseil">{m['brief.mission.conseil']()}</FieldLabel>
-								</div>
-							</RadioGroup>
-						</Field>
-						<Field>
-							<FieldLabel for="budget">
-								{m['brief.budget']()}
-								<span class="text-muted-foreground">({m['booking.optional']()})</span>
-							</FieldLabel>
-							<Input
-								id="budget"
-								bind:value={budget}
-								placeholder={m['brief.budget.placeholder']()}
-							/>
-						</Field>
-						<Field>
-							<FieldLabel>{m['brief.urgency']()}</FieldLabel>
-							<RadioGroup bind:value={urgency} class="mt-1 flex flex-col gap-2">
-								<div class="flex items-center gap-2">
-									<RadioGroupItem value="normal" id="normal" />
-									<FieldLabel for="normal">{m['brief.urgency.normal']()}</FieldLabel>
-								</div>
-								<div class="flex items-center gap-2">
-									<RadioGroupItem value="urgent" id="urgent" />
-									<FieldLabel for="urgent">{m['brief.urgency.urgent']()}</FieldLabel>
-								</div>
-							</RadioGroup>
-						</Field>
-						<Field>
-							<FieldLabel for="linkedin">
-								{m['brief.linkedin']()}
-								<span class="text-muted-foreground">({m['booking.optional']()})</span>
-							</FieldLabel>
-							<Input
-								id="linkedin"
-								bind:value={linkedin}
-								placeholder={m['brief.linkedin.placeholder']()}
-							/>
-						</Field>
+
+						<!-- Dynamic fields from formFields config -->
+						{#each effectiveFields as field (field.key)}
+							{#if field.type === 'text'}
+								<Field>
+									<FieldLabel for={field.key}>
+										{field.label}
+										{#if !field.required}
+											<span class="text-muted-foreground">({m['booking.optional']()})</span>
+										{/if}
+									</FieldLabel>
+									{#if field.key === 'companyName'}
+										<CompanyAutocomplete
+											id={field.key}
+											bind:value={values[field.key]}
+											bind:siren={selectedSiren}
+											placeholder={field.placeholder}
+										/>
+									{:else}
+										<Input
+											id={field.key}
+											bind:value={values[field.key]}
+											placeholder={field.placeholder}
+											required={field.required}
+										/>
+									{/if}
+								</Field>
+							{:else if field.type === 'textarea'}
+								<Field>
+									<FieldLabel for={field.key}>
+										{field.label}
+										{#if !field.required}
+											<span class="text-muted-foreground">({m['booking.optional']()})</span>
+										{/if}
+									</FieldLabel>
+									<Textarea
+										id={field.key}
+										bind:value={values[field.key]}
+										placeholder={field.placeholder}
+										rows={4}
+										required={field.required}
+									/>
+								</Field>
+							{:else if field.type === 'radio' && field.options?.length}
+								<Field>
+									<FieldLabel>
+										{field.label}
+										{#if !field.required}
+											<span class="text-muted-foreground">({m['booking.optional']()})</span>
+										{/if}
+									</FieldLabel>
+									<RadioGroup bind:value={values[field.key]} class="mt-1 flex flex-col gap-2">
+										{#each field.options as opt}
+											<div class="flex items-center gap-2">
+												<RadioGroupItem value={opt.value} id={`${field.key}-${opt.value}`} />
+												<FieldLabel for={`${field.key}-${opt.value}`}>{opt.label}</FieldLabel>
+											</div>
+										{/each}
+									</RadioGroup>
+								</Field>
+							{:else if field.type === 'select' && field.options?.length}
+								<Field>
+									<FieldLabel for={field.key}>
+										{field.label}
+										{#if !field.required}
+											<span class="text-muted-foreground">({m['booking.optional']()})</span>
+										{/if}
+									</FieldLabel>
+									<select
+										id={field.key}
+										class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+										bind:value={values[field.key]}
+									>
+										{#each field.options as opt}
+											<option value={opt.value}>{opt.label}</option>
+										{/each}
+									</select>
+								</Field>
+							{/if}
+						{/each}
+
 						<p class="text-xs text-muted-foreground">{m['brief.rgpd']()}</p>
 						<Button type="submit" class="w-full" disabled={submitting}>
 							{#if submitting}<Spinner class="mr-2" />{/if}
