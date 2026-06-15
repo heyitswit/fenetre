@@ -1,24 +1,24 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { toast } from 'svelte-sonner';
-	import * as m from '$lib/paraglide/messages';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { page } from '$app/state';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Textarea } from '$lib/components/ui/textarea/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Card from '$lib/components/ui/card/index.js';
+	import { Field, FieldGroup, FieldLabel } from '$lib/components/ui/field/index.js';
+	import * as Select from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Spinner } from '$lib/components/ui/spinner/index.js';
-	import * as Select from '$lib/components/ui/select/index.js';
-	import { Field, FieldGroup, FieldLabel } from '$lib/components/ui/field/index.js';
-	import { fade } from 'svelte/transition';
-	import { Video } from '@lucide/svelte';
-	import { formatDate, formatTime } from '$lib/utils';
+	import { Textarea } from '$lib/components/ui/textarea/index.js';
+	import * as m from '$lib/paraglide/messages';
 	import {
 		getAllBookings,
 		getBookingById,
 		updateBookingOutcome
 	} from '$lib/remote/bookings.remote';
+	import { formatDate, formatTime } from '$lib/utils';
+	import { Video } from '@lucide/svelte';
+	import { toast } from 'svelte-sonner';
+	import { fade } from 'svelte/transition';
 
 	const bookings = $derived(await getAllBookings());
 
@@ -115,7 +115,7 @@
 </script>
 
 <div class="flex h-full gap-6">
-	<div class="w-80 flex-shrink-0">
+	<div class="w-80 shrink-0">
 		<div class="mb-4 flex items-center justify-between">
 			<h1 class="text-xl font-bold">{m['admin.bookings.title']()}</h1>
 			<Badge variant="secondary">{filtered.length}</Badge>
@@ -282,13 +282,19 @@
 													: 'bg-muted text-muted-foreground'}"
 										>
 											{score}/100
-											{score >= 80 ? '· Bonne compatibilité' : score >= 50 ? '· À évaluer' : '· Faible'}
+											{score >= 80
+												? '· Bonne compatibilité'
+												: score >= 50
+													? '· À évaluer'
+													: '· Faible'}
 										</span>
 									{/if}
 								</div>
 								{#if ins.company}
 									<Card.Description class="mt-1">
-										{ins.company}{ins.companySector ? ` · ${ins.companySector}` : ''}{ins.companySize ? ` · ${ins.companySize}` : ''}
+										{ins.company}{ins.companySector
+											? ` · ${ins.companySector}`
+											: ''}{ins.companySize ? ` · ${ins.companySize}` : ''}
 									</Card.Description>
 								{/if}
 							</Card.Header>
@@ -298,7 +304,11 @@
 								{/if}
 								{#if ins.aiAngles && Array.isArray(ins.aiAngles) && ins.aiAngles.length}
 									<div>
-										<p class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Angles de mission</p>
+										<p
+											class="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+										>
+											Angles de mission
+										</p>
 										<ul class="flex flex-col gap-1">
 											{#each ins.aiAngles as angle}
 												<li class="flex gap-2">
@@ -311,8 +321,12 @@
 								{/if}
 								{#if ins.aiOpeningQuestion}
 									<div class="border-l-2 border-muted pl-3">
-										<p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Question d'accroche</p>
-										<p class="italic text-muted-foreground">{ins.aiOpeningQuestion}</p>
+										<p
+											class="mb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+										>
+											Question d'accroche
+										</p>
+										<p class="text-muted-foreground italic">{ins.aiOpeningQuestion}</p>
 									</div>
 								{/if}
 							</Card.Content>
