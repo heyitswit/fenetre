@@ -10,6 +10,8 @@ import {
 import type { Locale } from '$lib/paraglide/runtime';
 import type { InferSelectModel } from 'drizzle-orm';
 import type { bookings, eventTypes, briefs } from '$lib/server/db/schema';
+import type { PappersData } from '$lib/server/pappers';
+import type { AiBriefResult } from '$lib/server/ai-brief';
 
 type Booking = InferSelectModel<typeof bookings>;
 type EventType = InferSelectModel<typeof eventTypes>;
@@ -61,7 +63,9 @@ export async function sendConfirmationToClient(booking: BookingWithRelations): P
 export async function sendNotificationToFreelance(
 	booking: BookingWithRelations,
 	notificationEmailAddress?: string,
-	freelanceLocale?: Locale
+	freelanceLocale?: Locale,
+	pappers?: PappersData,
+	aiResult?: AiBriefResult
 ): Promise<void> {
 	const { subject, html } = notificationEmail({
 		clientName: booking.clientName,
@@ -72,7 +76,9 @@ export async function sendNotificationToFreelance(
 		startTime: booking.startTime,
 		meetLink: booking.meetLink ?? null,
 		locale: freelanceLocale ?? (booking.locale as Locale),
-		brief: booking.brief ?? null
+		brief: booking.brief ?? null,
+		pappers,
+		aiResult
 	});
 
 	await resend.emails.send({

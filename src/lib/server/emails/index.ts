@@ -3,6 +3,8 @@ import mjml2html from 'mjml';
 import * as m from '$lib/paraglide/messages';
 import type { Locale } from '$lib/paraglide/runtime';
 import { formatDayLabel, formatTime } from '$lib/utils';
+import type { PappersData } from '$lib/server/pappers';
+import type { AiBriefResult } from '$lib/server/ai-brief';
 import confirmationSrc from './templates/confirmation.mjml?raw';
 import reminderSrc from './templates/reminder.mjml?raw';
 import notificationSrc from './templates/notification.mjml?raw';
@@ -104,6 +106,8 @@ export interface NotificationEmailData {
 		budget: string | null;
 		urgency: string | null;
 	} | null;
+	pappers?: PappersData | null;
+	aiResult?: AiBriefResult | null;
 }
 
 export function passwordResetEmail(
@@ -150,6 +154,30 @@ function translateUrgency(type: string | null, l: { locale: Locale }): string | 
 export function notificationEmail(data: NotificationEmailData): { subject: string; html: string } {
 	const l = { locale: data.locale } as const;
 
+	const score = data.aiResult?.compatibilityScore ?? null;
+	const scoreBadge = score !== null
+		? score >= 80
+			? `✓ Bonne compatibilité — ${score}/100`
+			: score >= 50
+				? `~ À évaluer — ${score}/100`
+				: `↓ Faible compatibilité — ${score}/100`
+		: null;
+
+	const aiInsights =
+		data.aiResult || data.pappers
+			? {
+					company: data.pappers?.company ?? null,
+					companySector: data.pappers?.companySector ?? null,
+					companySize: data.pappers?.companySize ?? null,
+					aiBrief: data.aiResult?.aiBrief ?? null,
+					aiAngles: data.aiResult?.aiAngles?.length ? data.aiResult.aiAngles : null,
+					aiOpeningQuestion: data.aiResult?.aiOpeningQuestion ?? null,
+					scoreBadge,
+					scoreBadgeBg: score !== null && score >= 80 ? '#c8f5d8' : score !== null && score >= 50 ? '#fef3c7' : '#f3f4f6',
+					scoreBadgeColor: score !== null && score >= 80 ? '#166534' : score !== null && score >= 50 ? '#92400e' : '#6b7280'
+				}
+			: null;
+
 	return {
 		subject: m['email.notification.subject'](
 			{
@@ -174,6 +202,7 @@ export function notificationEmail(data: NotificationEmailData): { subject: strin
 						urgency: translateUrgency(data.brief.urgency, l)
 					}
 				: null,
+			aiInsights,
 			labelName: m['email.notification.label_name']({}, l),
 			labelEmail: m['email.notification.label_email']({}, l),
 			labelSource: m['email.notification.label_source']({}, l),
