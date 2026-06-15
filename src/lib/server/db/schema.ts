@@ -16,6 +16,19 @@ export * from './auth.schema';
 
 export type PortfolioLink = { missionType: string; title: string; url: string };
 
+// Re-exported from $lib/form-fields so Drizzle's $type<> can reference them without $lib alias
+export type FormFieldOption = { value: string; label: string };
+export type FormFieldType = 'text' | 'textarea' | 'radio' | 'select';
+export type FormField = {
+	key: string;
+	label: string;
+	type: FormFieldType;
+	options?: FormFieldOption[];
+	required?: boolean;
+	enabled: boolean;
+	placeholder?: string;
+};
+
 // One row per user — replaces the global app_settings singleton
 export const userSettings = pgTable('user_settings', {
 	userId: text('user_id')
@@ -45,6 +58,7 @@ export const eventTypes = pgTable(
 		isBusyMode: boolean('is_busy_mode').default(false).notNull(),
 		color: text('color').default('#6366f1'),
 		sortOrder: integer('sort_order').default(0),
+		formFields: jsonb('form_fields').$type<FormField[] | null>(),
 		createdAt: timestamp('created_at').defaultNow().notNull()
 	},
 	(t) => [
@@ -114,6 +128,8 @@ export const briefs = pgTable(
 		missionType: text('mission_type'), // courte | longue | conseil
 		budget: text('budget'),
 		urgency: text('urgency'), // normal | urgent
+		customFields: jsonb('custom_fields').$type<Record<string, string> | null>(),
+		companySiren: text('company_siren'),
 		isAbandoned: boolean('is_abandoned').default(false).notNull(),
 		createdAt: timestamp('created_at').defaultNow().notNull()
 	},
@@ -133,6 +149,7 @@ export const prospectInsights = pgTable(
 			.notNull(),
 		company: text('company'),
 		companyDomain: text('company_domain'),
+		companySiren: text('company_siren'),
 		companySector: text('company_sector'),
 		companySize: text('company_size'),
 		companyDescription: text('company_description'),
