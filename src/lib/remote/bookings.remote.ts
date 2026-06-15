@@ -104,7 +104,9 @@ export const saveBrief = command(
 		stack: z.string().optional(),
 		missionType: z.string().optional(),
 		budget: z.string().optional(),
-		urgency: z.string().optional()
+		urgency: z.string().optional(),
+		customFields: z.record(z.string(), z.string()).optional(),
+		companySiren: z.string().optional()
 	}),
 	async (input) => {
 		if (await formLimiter.isLimited(getRequestEvent())) error(429, 'Too many requests');
@@ -205,18 +207,43 @@ export const createBooking = command(
 				});
 				if (!fullBooking) return;
 
-				await Promise.all([
-					sendConfirmationToClient(fullBooking),
-					sendNotificationToFreelance(fullBooking, notificationEmail ?? undefined, preferredLocale as Locale)
-				]);
+				// Client confirmation first — no need to wait for enrichment
+				await sendConfirmationToClient(fullBooking);
 
-				const companyName = fullBooking.brief?.companyName;
-				if (companyName) {
-					const { enrichFromPappers } = await import('$lib/server/pappers');
-					void enrichFromPappers(companyName, booking.id).catch((err) => {
-						console.error('Pappers enrichment failed for booking', booking.id, err);
+				// Pappers then AI brief (sequential — AI uses company data)
+				const { fetchPappersData } = await import('$lib/server/pappers');
+				const { generateAiBrief } = await import('$lib/server/ai-brief');
+
+				const companyName = fullBooking.brief?.companyName ?? '';
+				const companySiren = fullBooking.brief?.companySiren ?? undefined;
+
+				const pappers = (companyName || companySiren)
+					? await fetchPappersData(companyName, companySiren).catch(() => null)
+					: null;
+
+				const aiResult = await generateAiBrief(fullBooking.brief, pappers).catch(() => null);
+
+				if (pappers || aiResult) {
+					await db.insert(prospectInsights).values({
+						bookingId: booking.id,
+						company: pappers?.company ?? null,
+						companySiren: pappers?.companySiren ?? null,
+						companySector: pappers?.companySector ?? null,
+						companySize: pappers?.companySize ?? null,
+						aiBrief: aiResult?.aiBrief ?? null,
+						aiAngles: aiResult?.aiAngles ?? null,
+						aiOpeningQuestion: aiResult?.aiOpeningQuestion ?? null,
+						compatibilityScore: aiResult?.compatibilityScore ?? null
 					});
 				}
+
+				await sendNotificationToFreelance(
+					fullBooking,
+					notificationEmail ?? undefined,
+					preferredLocale as Locale,
+					pappers ?? undefined,
+					aiResult ?? undefined
+				);
 			} catch (err) {
 				console.error('Post-booking tasks failed for booking', booking.id, err);
 			}

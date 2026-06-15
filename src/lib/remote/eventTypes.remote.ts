@@ -8,6 +8,17 @@ import { loadActiveEventTypes, loadEventTypeBySlug } from '$lib/server/public-qu
 import { and, asc, eq } from 'drizzle-orm';
 import * as z from 'zod';
 
+const FormFieldOptionSchema = z.object({ value: z.string().min(1), label: z.string().min(1) });
+const FormFieldSchema = z.object({
+	key: z.string().min(1),
+	label: z.string().min(1),
+	type: z.enum(['text', 'textarea', 'radio', 'select']),
+	options: z.array(FormFieldOptionSchema).optional(),
+	required: z.boolean().optional(),
+	enabled: z.boolean(),
+	placeholder: z.string().optional()
+});
+
 export const getActiveEventTypes = query(
 	z.object({ username: z.string() }),
 	async ({ username }) => loadActiveEventTypes(username)
@@ -34,7 +45,8 @@ export const createEventType = command(
 		description: z.string().optional(),
 		duration: z.number().int().positive(),
 		color: z.string().optional(),
-		sortOrder: z.number().int().optional()
+		sortOrder: z.number().int().optional(),
+		formFields: z.array(FormFieldSchema).optional()
 	}),
 	async (input) => {
 		const user = requireAuth();
@@ -58,7 +70,8 @@ export const updateEventType = command(
 		isActive: z.boolean().optional(),
 		isBusyMode: z.boolean().optional(),
 		color: z.string().optional(),
-		sortOrder: z.number().int().optional()
+		sortOrder: z.number().int().optional(),
+		formFields: z.array(FormFieldSchema).nullable().optional()
 	}),
 	async ({ id, ...patch }) => {
 		const user = requireAuth();
