@@ -267,33 +267,53 @@
 					{/if}
 
 					{#if selected.insights}
+						{@const ins = selected.insights}
+						{@const score = ins.compatibilityScore}
 						<Card.Root>
-							<Card.Header>
-								<Card.Title class="text-base">{m['admin.bookings.insights.title']()}</Card.Title>
-								{#if selected.insights.compatibilityScore !== null}
-									<Card.Description>
-										{m['admin.bookings.insights.score']({
-											score: selected.insights.compatibilityScore
-										})}
+							<Card.Header class="pb-3">
+								<div class="flex items-center justify-between gap-3">
+									<Card.Title class="text-base">Brief IA</Card.Title>
+									{#if score !== null}
+										<span
+											class="rounded-full px-2.5 py-0.5 text-xs font-semibold {score >= 80
+												? 'bg-emerald-100 text-emerald-800'
+												: score >= 50
+													? 'bg-amber-100 text-amber-800'
+													: 'bg-muted text-muted-foreground'}"
+										>
+											{score}/100
+											{score >= 80 ? '· Bonne compatibilité' : score >= 50 ? '· À évaluer' : '· Faible'}
+										</span>
+									{/if}
+								</div>
+								{#if ins.company}
+									<Card.Description class="mt-1">
+										{ins.company}{ins.companySector ? ` · ${ins.companySector}` : ''}{ins.companySize ? ` · ${ins.companySize}` : ''}
 									</Card.Description>
 								{/if}
 							</Card.Header>
-							<Card.Content class="flex flex-col gap-3 text-sm">
-								{#if selected.insights.company}
+							<Card.Content class="flex flex-col gap-4 text-sm">
+								{#if ins.aiBrief}
+									<p class="leading-relaxed">{ins.aiBrief}</p>
+								{/if}
+								{#if ins.aiAngles && Array.isArray(ins.aiAngles) && ins.aiAngles.length}
 									<div>
-										<p class="font-medium">{selected.insights.company}</p>
-										{#if selected.insights.companySector}
-											<p class="text-muted-foreground">{selected.insights.companySector}</p>
-										{/if}
+										<p class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Angles de mission</p>
+										<ul class="flex flex-col gap-1">
+											{#each ins.aiAngles as angle}
+												<li class="flex gap-2">
+													<span class="mt-0.5 text-muted-foreground">→</span>
+													<span>{angle}</span>
+												</li>
+											{/each}
+										</ul>
 									</div>
 								{/if}
-								{#if selected.insights.aiBrief}
-									<p>{selected.insights.aiBrief}</p>
-								{/if}
-								{#if selected.insights.aiOpeningQuestion}
-									<p class="text-muted-foreground italic">
-										"{selected.insights.aiOpeningQuestion}"
-									</p>
+								{#if ins.aiOpeningQuestion}
+									<div class="border-l-2 border-muted pl-3">
+										<p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Question d'accroche</p>
+										<p class="italic text-muted-foreground">{ins.aiOpeningQuestion}</p>
+									</div>
 								{/if}
 							</Card.Content>
 						</Card.Root>
