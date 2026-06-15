@@ -1,20 +1,20 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { logout } from '$lib/auth-client';
-	import * as m from '$lib/paraglide/messages';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Separator } from '$lib/components/ui/separator/index.js';
-	import {
-		CalendarDays,
-		Users,
-		Settings,
-		LayoutDashboard,
-		Clock,
-		LogOut,
-		UserCog
-	} from '@lucide/svelte';
 	import LanguageSelector from '$lib/components/language-selector.svelte';
 	import ThemeToggle from '$lib/components/theme-toggle.svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import { Separator } from '$lib/components/ui/separator/index.js';
+	import * as m from '$lib/paraglide/messages';
+	import {
+		CalendarDays,
+		Clock,
+		LayoutDashboard,
+		LogOut,
+		Settings,
+		UserCog,
+		Users
+	} from '@lucide/svelte';
 
 	let { children, data } = $props();
 
@@ -33,7 +33,7 @@
 </script>
 
 <div class="flex h-screen overflow-hidden">
-	<aside class="flex w-56 flex-shrink-0 flex-col border-r bg-card px-3 py-4">
+	<aside class="flex w-56 shrink-0 flex-col border-r bg-card px-3 py-4">
 		<div class="mb-4 flex items-center gap-2 px-2">
 			<img src="/image.png" alt="Fenêtre" class="size-7 rounded-full" />
 			<span class="text-sm font-semibold text-muted-foreground">Admin</span>

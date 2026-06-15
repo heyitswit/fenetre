@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import CompanyAutocomplete from '$lib/components/booking/CompanyAutocomplete.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Cal from '$lib/components/ui/calendar/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
@@ -11,7 +12,6 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Spinner } from '$lib/components/ui/spinner/index.js';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
-	import CompanyAutocomplete from '$lib/components/booking/CompanyAutocomplete.svelte';
 	import { getEnabledFields } from '$lib/form-fields';
 	import * as m from '$lib/paraglide/messages';
 	import { getLocale } from '$lib/paraglide/runtime';
@@ -283,7 +283,7 @@
 									</FieldLabel>
 									<select
 										id={field.key}
-										class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+										class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
 										bind:value={values[field.key]}
 									>
 										{#each field.options as opt}
@@ -310,7 +310,7 @@
 		class="flex items-start justify-center px-4 py-8 md:h-screen md:items-center md:overflow-hidden"
 	>
 		<Card.Root
-			class="flex w-full max-w-5xl flex-col overflow-hidden md:h-full md:max-h-[720px]"
+			class="flex w-full max-w-5xl flex-col overflow-hidden md:h-full md:max-h-180"
 			style="min-height: 520px;"
 		>
 			<div
