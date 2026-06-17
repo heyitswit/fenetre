@@ -14,6 +14,7 @@
 	import { getAllEventTypes, setBusyModeAll } from '$lib/remote/eventTypes.remote';
 	import { slide } from 'svelte/transition';
 	import { getSettings, updateSettings } from '$lib/remote/settings.remote';
+	import { authClient } from '$lib/auth-client';
 	import { locales, type Locale } from '$lib/paraglide/runtime';
 	import type { PortfolioLink } from '$lib/server/db/schema';
 
@@ -33,6 +34,21 @@
 		if (error === 'google_not_configured')
 			toast.error(m['admin.settings.google.error_not_configured']());
 	});
+
+	let displayName = $state(page.data.user.name ?? '');
+	let savingName = $state(false);
+
+	async function saveName() {
+		savingName = true;
+		try {
+			await authClient.updateUser({ name: displayName });
+			toast.success(m['admin.settings.saved']());
+		} catch {
+			toast.error(m['admin.settings.error']());
+		} finally {
+			savingName = false;
+		}
+	}
 
 	let username = $state('');
 	let notificationEmail = $state('');
@@ -106,6 +122,21 @@
 
 <div class="flex flex-col gap-6">
 	<h1 class="text-xl font-bold">{m['admin.settings.title']()}</h1>
+
+	<!-- Nom affiché -->
+	<Card.Root>
+		<Card.Header>
+			<Card.Title class="text-base">Nom affiché</Card.Title>
+			<Card.Description>Visible par vos clients sur la page de réservation.</Card.Description>
+		</Card.Header>
+		<Card.Content class="flex items-center gap-3">
+			<Input bind:value={displayName} placeholder="Prénom Nom" class="max-w-xs" />
+			<Button onclick={saveName} disabled={savingName} variant="outline" size="sm">
+				{#if savingName}<Spinner class="mr-2" />{/if}
+				Enregistrer
+			</Button>
+		</Card.Content>
+	</Card.Root>
 
 	<!-- URL publique -->
 	<Card.Root>
