@@ -149,18 +149,23 @@ export async function loadPublicPortfolioLinks(username: string) {
 }
 
 export async function loadBookingByToken(token: string) {
-	const booking = await db.query.bookings.findFirst({
-		where: and(eq(bookings.rescheduleToken, token), ne(bookings.status, 'cancelled')),
-		with: { eventType: true, brief: true }
-	});
-	if (!booking) error(404, 'Booking not found');
+	// Single round-trip: join the event type and the owner's username instead of
+	// fetching the booking first and then its username in a second query.
+	const [row] = await db
+		.select({
+			booking: getTableColumns(bookings),
+			eventType: getTableColumns(eventTypes),
+			username: userSettings.username
+		})
+		.from(bookings)
+		.innerJoin(eventTypes, eq(bookings.eventTypeId, eventTypes.id))
+		.leftJoin(userSettings, eq(userSettings.userId, bookings.userId))
+		.where(and(eq(bookings.rescheduleToken, token), ne(bookings.status, 'cancelled')))
+		.limit(1);
 
-	const [settings] = await db
-		.select({ username: userSettings.username })
-		.from(userSettings)
-		.where(eq(userSettings.userId, booking.userId));
+	if (!row) error(404, 'Booking not found');
 
-	return { ...booking, username: settings?.username ?? null };
+	return { ...row.booking, eventType: row.eventType, username: row.username ?? null };
 }
 
 async function fetchBySlug(username: string, slug: string) {

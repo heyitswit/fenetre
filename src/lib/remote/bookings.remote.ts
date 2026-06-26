@@ -1,6 +1,6 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/server/db';
-import { bookings, briefs, eventTypes, userSettings } from '$lib/server/db/schema';
+import { bookings, briefs, eventTypes, prospectInsights, userSettings } from '$lib/server/db/schema';
 import { loadBookingConfirmation, loadBookingByToken } from '$lib/server/public-queries';
 import {
 	createCalendarEvent,
@@ -186,15 +186,19 @@ export const createBooking = command(
 
 		void (async () => {
 			try {
-				await db.update(briefs).set({ bookingId: booking.id }).where(eq(briefs.id, input.briefId));
-
-				const { eventId: googleEventId, meetLink } = await createCalendarEvent(userId, {
-					summary: `${row.name} — ${input.clientName}`,
-					description: 'Booked via fenêtre',
-					startTime,
-					endTime,
-					attendeeEmail: input.clientEmail
-				});
+				// Linking the brief and creating the calendar event are independent —
+				// run them together instead of waiting for the DB write before the
+				// (slow) Google Calendar call.
+				const [, { eventId: googleEventId, meetLink }] = await Promise.all([
+					db.update(briefs).set({ bookingId: booking.id }).where(eq(briefs.id, input.briefId)),
+					createCalendarEvent(userId, {
+						summary: `${row.name} — ${input.clientName}`,
+						description: 'Booked via fenêtre',
+						startTime,
+						endTime,
+						attendeeEmail: input.clientEmail
+					})
+				]);
 
 				await db
 					.update(bookings)
