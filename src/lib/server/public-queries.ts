@@ -24,7 +24,7 @@ export async function loadActiveEventTypes(username: string) {
 	return rows;
 }
 
-export async function loadEventTypeBySlug(username: string, slug: string) {
+async function resolveEventType(username: string, slug: string) {
 	type R = Awaited<ReturnType<typeof fetchBySlug>>;
 	const cached = getBySlug<R>(username, slug);
 	if (cached !== null) return cached;
@@ -34,17 +34,18 @@ export async function loadEventTypeBySlug(username: string, slug: string) {
 	return et;
 }
 
+export async function loadEventTypeBySlug(username: string, slug: string) {
+	const et = await resolveEventType(username, slug);
+	if (!et) return null;
+	const { bufferMinutes: _bufferMinutes, ...publicEventType } = et;
+	return publicEventType;
+}
+
 export async function loadAvailableSlots(
 	username: string,
 	eventTypeSlug: string
 ): Promise<Record<string, { start: string; end: string }[]>> {
-	const [row] = await db
-		.select({ ...getTableColumns(eventTypes), bufferMinutes: userSettings.bufferMinutes })
-		.from(eventTypes)
-		.innerJoin(userSettings, eq(eventTypes.userId, userSettings.userId))
-		.where(and(eq(userSettings.username, username), eq(eventTypes.slug, eventTypeSlug)))
-		.limit(1);
-
+	const row = await resolveEventType(username, eventTypeSlug);
 	if (!row) return {};
 
 	const { userId, bufferMinutes } = row;
@@ -149,23 +150,30 @@ export async function loadPublicPortfolioLinks(username: string) {
 }
 
 export async function loadBookingByToken(token: string) {
-	const booking = await db.query.bookings.findFirst({
-		where: and(eq(bookings.rescheduleToken, token), ne(bookings.status, 'cancelled')),
-		with: { eventType: true, brief: true }
-	});
-	if (!booking) error(404, 'Booking not found');
+	const [row] = await db
+		.select({
+			booking: getTableColumns(bookings),
+			eventType: getTableColumns(eventTypes),
+			username: userSettings.username
+		})
+		.from(bookings)
+		.innerJoin(eventTypes, eq(bookings.eventTypeId, eventTypes.id))
+		.leftJoin(userSettings, eq(userSettings.userId, bookings.userId))
+		.where(and(eq(bookings.rescheduleToken, token), ne(bookings.status, 'cancelled')))
+		.limit(1);
 
-	const [settings] = await db
-		.select({ username: userSettings.username })
-		.from(userSettings)
-		.where(eq(userSettings.userId, booking.userId));
+	if (!row) error(404, 'Booking not found');
 
-	return { ...booking, username: settings?.username ?? null };
+	return { ...row.booking, eventType: row.eventType, username: row.username ?? null };
 }
 
 async function fetchBySlug(username: string, slug: string) {
 	const [et] = await db
-		.select({ ...getTableColumns(eventTypes), hostName: user.name })
+		.select({
+			...getTableColumns(eventTypes),
+			hostName: user.name,
+			bufferMinutes: userSettings.bufferMinutes
+		})
 		.from(eventTypes)
 		.innerJoin(userSettings, eq(eventTypes.userId, userSettings.userId))
 		.innerJoin(user, eq(user.id, userSettings.userId))
