@@ -3,6 +3,7 @@ import { db } from '$lib/server/db';
 import type { PortfolioLink } from '$lib/server/db/schema';
 import { userSettings } from '$lib/server/db/schema';
 import { requireAuth } from '$lib/server/remote-helpers';
+import { invalidateForUser } from '$lib/server/event-types-cache';
 import { locales } from '$lib/paraglide/runtime';
 import { loadPublicPortfolioLinks } from '$lib/server/public-queries';
 import { eq } from 'drizzle-orm';
@@ -68,6 +69,9 @@ export const updateSettings = command(
 			.insert(userSettings)
 			.values({ userId: user.id, username: input.username ?? user.id, ...input })
 			.onConflictDoUpdate({ target: userSettings.userId, set: input });
+		// username/bufferMinutes feed the cached event-type lookup — drop it so the
+		// booking page recomputes slots against the new settings.
+		invalidateForUser(user.id);
 		void getSettings().refresh();
 		return { ok: true };
 	}

@@ -24,7 +24,11 @@ export async function loadActiveEventTypes(username: string) {
 	return rows;
 }
 
-export async function loadEventTypeBySlug(username: string, slug: string) {
+// Resolve + cache the event type with everything the booking flow needs:
+// display columns, host name, and the owner's buffer. Shared by the public
+// event-type query and the slot computation so a single page render resolves
+// it once instead of issuing two near-identical joins.
+async function resolveEventType(username: string, slug: string) {
 	type R = Awaited<ReturnType<typeof fetchBySlug>>;
 	const cached = getBySlug<R>(username, slug);
 	if (cached !== null) return cached;
@@ -34,17 +38,20 @@ export async function loadEventTypeBySlug(username: string, slug: string) {
 	return et;
 }
 
+export async function loadEventTypeBySlug(username: string, slug: string) {
+	const et = await resolveEventType(username, slug);
+	if (!et) return null;
+	// bufferMinutes is an internal scheduling detail — keep it out of the
+	// publicly-returned event type so the contract is unchanged.
+	const { bufferMinutes: _bufferMinutes, ...publicEventType } = et;
+	return publicEventType;
+}
+
 export async function loadAvailableSlots(
 	username: string,
 	eventTypeSlug: string
 ): Promise<Record<string, { start: string; end: string }[]>> {
-	const [row] = await db
-		.select({ ...getTableColumns(eventTypes), bufferMinutes: userSettings.bufferMinutes })
-		.from(eventTypes)
-		.innerJoin(userSettings, eq(eventTypes.userId, userSettings.userId))
-		.where(and(eq(userSettings.username, username), eq(eventTypes.slug, eventTypeSlug)))
-		.limit(1);
-
+	const row = await resolveEventType(username, eventTypeSlug);
 	if (!row) return {};
 
 	const { userId, bufferMinutes } = row;
@@ -170,7 +177,11 @@ export async function loadBookingByToken(token: string) {
 
 async function fetchBySlug(username: string, slug: string) {
 	const [et] = await db
-		.select({ ...getTableColumns(eventTypes), hostName: user.name })
+		.select({
+			...getTableColumns(eventTypes),
+			hostName: user.name,
+			bufferMinutes: userSettings.bufferMinutes
+		})
 		.from(eventTypes)
 		.innerJoin(userSettings, eq(eventTypes.userId, userSettings.userId))
 		.innerJoin(user, eq(user.id, userSettings.userId))
