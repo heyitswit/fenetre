@@ -1,11 +1,9 @@
 import { redirect } from '@sveltejs/kit';
-import { auth } from '$lib/server/auth';
 import { createOAuth2Client } from '$lib/server/google';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ request, cookies }) => {
-	const session = await auth.api.getSession({ headers: request.headers });
-	if (!session) redirect(303, '/login');
+export const GET: RequestHandler = async ({ locals, cookies }) => {
+	if (!locals.user) redirect(303, '/login');
 
 	const oauth2 = createOAuth2Client();
 	const state = crypto.randomUUID();

@@ -186,9 +186,6 @@ export const createBooking = command(
 
 		void (async () => {
 			try {
-				// Linking the brief and creating the calendar event are independent —
-				// run them together instead of waiting for the DB write before the
-				// (slow) Google Calendar call.
 				const [, { eventId: googleEventId, meetLink }] = await Promise.all([
 					db.update(briefs).set({ bookingId: booking.id }).where(eq(briefs.id, input.briefId)),
 					createCalendarEvent(userId, {

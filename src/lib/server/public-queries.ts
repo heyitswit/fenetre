@@ -24,10 +24,6 @@ export async function loadActiveEventTypes(username: string) {
 	return rows;
 }
 
-// Resolve + cache the event type with everything the booking flow needs:
-// display columns, host name, and the owner's buffer. Shared by the public
-// event-type query and the slot computation so a single page render resolves
-// it once instead of issuing two near-identical joins.
 async function resolveEventType(username: string, slug: string) {
 	type R = Awaited<ReturnType<typeof fetchBySlug>>;
 	const cached = getBySlug<R>(username, slug);
@@ -41,8 +37,6 @@ async function resolveEventType(username: string, slug: string) {
 export async function loadEventTypeBySlug(username: string, slug: string) {
 	const et = await resolveEventType(username, slug);
 	if (!et) return null;
-	// bufferMinutes is an internal scheduling detail — keep it out of the
-	// publicly-returned event type so the contract is unchanged.
 	const { bufferMinutes: _bufferMinutes, ...publicEventType } = et;
 	return publicEventType;
 }
@@ -156,8 +150,6 @@ export async function loadPublicPortfolioLinks(username: string) {
 }
 
 export async function loadBookingByToken(token: string) {
-	// Single round-trip: join the event type and the owner's username instead of
-	// fetching the booking first and then its username in a second query.
 	const [row] = await db
 		.select({
 			booking: getTableColumns(bookings),

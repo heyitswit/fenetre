@@ -69,8 +69,6 @@ export const updateSettings = command(
 			.insert(userSettings)
 			.values({ userId: user.id, username: input.username ?? user.id, ...input })
 			.onConflictDoUpdate({ target: userSettings.userId, set: input });
-		// username/bufferMinutes feed the cached event-type lookup — drop it so the
-		// booking page recomputes slots against the new settings.
 		invalidateForUser(user.id);
 		void getSettings().refresh();
 		return { ok: true };

@@ -31,10 +31,6 @@ export const auth = betterAuth({
 	socialProviders: {},
 	session: {
 		expiresIn: 60 * 60 * 24 * 7,
-		// Sign the session into a short-lived cookie so getSession() can resolve
-		// from the cookie instead of hitting the DB on every request. This is the
-		// single biggest win for remote-function latency, which otherwise pays a
-		// session lookup (against a remote Aiven Postgres) before each call.
 		cookieCache: {
 			enabled: true,
 			maxAge: 5 * 60

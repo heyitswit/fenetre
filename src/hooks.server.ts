@@ -35,9 +35,6 @@ const handleRegistrationGuard: Handle = async ({ event, resolve }) => {
 };
 
 const handleBetterAuth: Handle = async ({ event, resolve }) => {
-	// Skip session resolution entirely on requests with no session cookie
-	// (public booking pages, the directory, static-ish remote queries…). This
-	// avoids paying getSession() — and its DB round-trip — for anonymous traffic.
 	if (getSessionCookie(event.request)) {
 		const session = await auth.api.getSession({ headers: event.request.headers });
 

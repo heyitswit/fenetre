@@ -1,13 +1,11 @@
 import { redirect } from '@sveltejs/kit';
-import { auth } from '$lib/server/auth';
 import { createOAuth2Client } from '$lib/server/google';
 import { db } from '$lib/server/db';
 import { userSettings } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ request, url, cookies }) => {
-	const session = await auth.api.getSession({ headers: request.headers });
-	if (!session) redirect(303, '/login');
+export const GET: RequestHandler = async ({ locals, url, cookies }) => {
+	if (!locals.user) redirect(303, '/login');
 
 	const code = url.searchParams.get('code');
 	const state = url.searchParams.get('state');
@@ -29,8 +27,8 @@ export const GET: RequestHandler = async ({ request, url, cookies }) => {
 	await db
 		.insert(userSettings)
 		.values({
-			userId: session.user.id,
-			username: session.user.id, // placeholder if not set yet
+			userId: locals.user.id,
+			username: locals.user.id, // placeholder if not set yet
 			googleRefreshToken: tokens.refresh_token,
 			googleCalendarId: 'primary'
 		})
