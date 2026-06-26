@@ -2,6 +2,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { building } from '$app/environment';
 import { auth } from '$lib/server/auth';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
+import { getSessionCookie } from 'better-auth/cookies';
 import type { Handle } from '@sveltejs/kit';
 import { paraglideMiddleware } from '$lib/paraglide/server';
 import { db } from '$lib/server/db';
@@ -34,11 +35,16 @@ const handleRegistrationGuard: Handle = async ({ event, resolve }) => {
 };
 
 const handleBetterAuth: Handle = async ({ event, resolve }) => {
-	const session = await auth.api.getSession({ headers: event.request.headers });
+	// Skip session resolution entirely on requests with no session cookie
+	// (public booking pages, the directory, static-ish remote queries…). This
+	// avoids paying getSession() — and its DB round-trip — for anonymous traffic.
+	if (getSessionCookie(event.request)) {
+		const session = await auth.api.getSession({ headers: event.request.headers });
 
-	if (session) {
-		event.locals.session = session.session;
-		event.locals.user = session.user;
+		if (session) {
+			event.locals.session = session.session;
+			event.locals.user = session.user;
+		}
 	}
 
 	return svelteKitHandler({ event, resolve, auth, building });
