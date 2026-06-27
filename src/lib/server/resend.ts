@@ -6,7 +6,9 @@ import {
 	reminderEmail,
 	notificationEmail,
 	passwordResetEmail,
-	phoneRevealEmail
+	phoneRevealEmail,
+	followupEmail,
+	recoveryEmail
 } from '$lib/server/emails';
 import type { Locale } from '$lib/paraglide/runtime';
 import type { InferSelectModel } from 'drizzle-orm';
@@ -133,6 +135,77 @@ export async function sendReminderToClient(booking: BookingWithRelations): Promi
 	await resend.emails.send({
 		from: FROM,
 		to: booking.clientEmail,
+		subject,
+		html
+	});
+}
+
+export async function sendSecondReminderToClient(booking: BookingWithRelations): Promise<void> {
+	const { subject, html } = reminderEmail({
+		clientName: booking.clientName,
+		eventTypeName: booking.eventType.name,
+		startTime: booking.startTime,
+		meetLink: booking.meetLink ?? null,
+		rescheduleUrl: `${env.ORIGIN}/reschedule/${booking.rescheduleToken}`,
+		locale: booking.locale as Locale,
+		imminent: true
+	});
+
+	await resend.emails.send({
+		from: FROM,
+		to: booking.clientEmail,
+		subject,
+		html
+	});
+}
+
+export interface FollowupEmailInput {
+	clientName: string;
+	clientEmail: string;
+	company: string | null;
+	eventTypeName: string;
+	originalDate: Date;
+	notes: string | null;
+	bookingId: string;
+	notificationEmail?: string;
+	locale: Locale;
+}
+
+export async function sendFollowupToFreelance(input: FollowupEmailInput): Promise<void> {
+	const { subject, html } = followupEmail({
+		clientName: input.clientName,
+		clientEmail: input.clientEmail,
+		company: input.company,
+		eventTypeName: input.eventTypeName,
+		originalDate: input.originalDate,
+		notes: input.notes,
+		bookingUrl: `${env.ORIGIN}/admin/bookings?id=${input.bookingId}`,
+		locale: input.locale
+	});
+
+	await resend.emails.send({
+		from: FROM,
+		to: input.notificationEmail ?? FROM,
+		subject,
+		html
+	});
+}
+
+export interface RecoveryEmailInput {
+	clientEmail: string;
+	username: string;
+	locale: Locale;
+}
+
+export async function sendRecoveryToClient(input: RecoveryEmailInput): Promise<void> {
+	const { subject, html } = recoveryEmail({
+		resumeUrl: `${env.ORIGIN}/${input.username}`,
+		locale: input.locale
+	});
+
+	await resend.emails.send({
+		from: FROM,
+		to: input.clientEmail,
 		subject,
 		html
 	});

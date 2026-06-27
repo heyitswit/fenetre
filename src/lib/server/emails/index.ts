@@ -10,13 +10,17 @@ import reminderSrc from './templates/reminder.mjml?raw';
 import notificationSrc from './templates/notification.mjml?raw';
 import resetPasswordSrc from './templates/reset-password.mjml?raw';
 import phoneRevealSrc from './templates/phone-reveal.mjml?raw';
+import followupSrc from './templates/followup.mjml?raw';
+import recoverySrc from './templates/recovery.mjml?raw';
 
 const tpl = {
 	confirmation: Handlebars.compile(confirmationSrc),
 	reminder: Handlebars.compile(reminderSrc),
 	notification: Handlebars.compile(notificationSrc),
 	resetPassword: Handlebars.compile(resetPasswordSrc),
-	phoneReveal: Handlebars.compile(phoneRevealSrc)
+	phoneReveal: Handlebars.compile(phoneRevealSrc),
+	followup: Handlebars.compile(followupSrc),
+	recovery: Handlebars.compile(recoverySrc)
 };
 
 function toHtml(compiled: HandlebarsTemplateDelegate, data: object): string {
@@ -66,27 +70,36 @@ export interface ReminderEmailData {
 	meetLink: string | null;
 	rescheduleUrl: string;
 	locale: Locale;
+	// When true, copy reads "in 1h" instead of "tomorrow" (same template)
+	imminent?: boolean;
 }
 
 export function reminderEmail(data: ReminderEmailData): { subject: string; html: string } {
 	const firstName = data.clientName.split(' ')[0];
 	const l = { locale: data.locale } as const;
+	const time = formatTime(data.startTime, data.locale);
+
+	const copy = data.imminent
+		? {
+				subject: m['email.reminder_soon.subject']({ eventTypeName: data.eventTypeName }, l),
+				body: m['email.reminder_soon.body']({ time, eventTypeName: data.eventTypeName }, l),
+				seeYou: m['email.reminder_soon.see_you']({}, l)
+			}
+		: {
+				subject: m['email.reminder.subject']({ eventTypeName: data.eventTypeName }, l),
+				body: m['email.reminder.body']({ time, eventTypeName: data.eventTypeName }, l),
+				seeYou: m['email.reminder.see_you']({}, l)
+			};
 
 	return {
-		subject: m['email.reminder.subject']({ eventTypeName: data.eventTypeName }, l),
+		subject: copy.subject,
 		html: toHtml(tpl.reminder, {
 			greeting: m['email.reminder.greeting']({ firstName }, l),
-			body: m['email.reminder.body'](
-				{
-					time: formatTime(data.startTime, data.locale),
-					eventTypeName: data.eventTypeName
-				},
-				l
-			),
+			body: copy.body,
 			context: m['email.reminder.context']({}, l),
 			meetLink: data.meetLink,
 			meetLabel: m['email.confirmation.meet']({}, l),
-			seeYou: m['email.reminder.see_you']({}, l),
+			seeYou: copy.seeYou,
 			rescheduleUrl: data.rescheduleUrl,
 			rescheduleLabel: m['email.reminder.reschedule']({}, l),
 			footer: m['email.footer']({}, l)
@@ -128,6 +141,62 @@ export function passwordResetEmail(
 			buttonLabel: m['email.reset_password.button']({}, l),
 			resetUrl,
 			expiry: m['email.reset_password.expiry']({}, l),
+			footer: m['email.footer']({}, l)
+		})
+	};
+}
+
+export interface FollowupEmailData {
+	clientName: string;
+	clientEmail: string;
+	company: string | null;
+	eventTypeName: string;
+	originalDate: Date;
+	notes: string | null;
+	bookingUrl: string;
+	locale: Locale;
+}
+
+export function followupEmail(data: FollowupEmailData): { subject: string; html: string } {
+	const l = { locale: data.locale } as const;
+
+	return {
+		subject: m['email.followup.subject']({ clientName: data.clientName }, l),
+		html: toHtml(tpl.followup, {
+			title: m['email.followup.title']({}, l),
+			intro: m['email.followup.intro'](
+				{ clientName: data.clientName, company: data.company ?? data.clientEmail },
+				l
+			),
+			originalLabel: m['email.followup.original_label']({}, l),
+			originalValue: m['email.followup.original_value'](
+				{ eventTypeName: data.eventTypeName, date: formatDayLabel(data.originalDate, data.locale) },
+				l
+			),
+			notesLabel: data.notes ? m['email.followup.notes_label']({}, l) : null,
+			notes: data.notes,
+			bookingUrl: data.bookingUrl,
+			cta: m['email.followup.cta']({}, l),
+			footer: m['email.footer']({}, l)
+		})
+	};
+}
+
+export interface RecoveryEmailData {
+	resumeUrl: string;
+	locale: Locale;
+}
+
+export function recoveryEmail(data: RecoveryEmailData): { subject: string; html: string } {
+	const l = { locale: data.locale } as const;
+
+	return {
+		subject: m['email.recovery.subject']({}, l),
+		html: toHtml(tpl.recovery, {
+			title: m['email.recovery.title']({}, l),
+			body: m['email.recovery.body']({}, l),
+			cta: m['email.recovery.cta']({}, l),
+			resumeUrl: data.resumeUrl,
 			footer: m['email.footer']({}, l)
 		})
 	};

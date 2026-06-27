@@ -212,6 +212,7 @@
 	"admin.bookings.insights.score": "Score: {score}/100",
 	"admin.bookings.tracking.title": "Tracking",
 	"admin.bookings.tracking.outcome": "Outcome",
+	"admin.bookings.tracking.followup_date": "Follow-up date",
 	"admin.bookings.tracking.notes": "Internal notes",
 	"admin.bookings.tracking.notes.placeholder": "Notes...",
 	"admin.bookings.tracking.save": "Save",
@@ -374,6 +375,26 @@
 			"context": "If your context has changed since you booked, feel free to reply to this email — it'll help me come even better prepared.",
 			"see_you": "See you tomorrow!",
 			"reschedule": "Need to reschedule?"
+		},
+		"reminder_soon": {
+			"subject": "It's in 1h — our {eventTypeName}",
+			"body": "We're meeting in an hour, at {time}, for our {eventTypeName}.",
+			"see_you": "See you shortly!"
+		},
+		"followup": {
+			"subject": "Follow-up due — {clientName}",
+			"title": "Follow-up scheduled for today",
+			"intro": "You planned to follow up with {clientName} ({company}) today.",
+			"original_label": "Initial call",
+			"original_value": "{eventTypeName} · {date}",
+			"notes_label": "Your notes",
+			"cta": "View prospect"
+		},
+		"recovery": {
+			"subject": "You started a booking",
+			"title": "You were almost there!",
+			"body": "You started booking a call but didn't finish. Pick it back up whenever you like — it only takes a minute.",
+			"cta": "Resume my booking"
 		},
 		"notification": {
 			"subject": "New booking — {clientName} ({eventTypeName})",

@@ -212,6 +212,7 @@
 	"admin.bookings.insights.score": "Score : {score}/100",
 	"admin.bookings.tracking.title": "Suivi",
 	"admin.bookings.tracking.outcome": "Résultat",
+	"admin.bookings.tracking.followup_date": "Date de relance",
 	"admin.bookings.tracking.notes": "Notes internes",
 	"admin.bookings.tracking.notes.placeholder": "Notes...",
 	"admin.bookings.tracking.save": "Sauvegarder",
@@ -374,6 +375,26 @@
 			"context": "Si votre contexte a changé depuis votre réservation, n'hésitez pas à me le glisser en réponse à cet email — ça me permettra d'arriver encore mieux préparée.",
 			"see_you": "À demain !",
 			"reschedule": "Besoin de reprogrammer ?"
+		},
+		"reminder_soon": {
+			"subject": "C'est dans 1h — notre {eventTypeName}",
+			"body": "On se retrouve dans une heure, à {time}, pour notre {eventTypeName}.",
+			"see_you": "À tout de suite !"
+		},
+		"followup": {
+			"subject": "Relance à faire — {clientName}",
+			"title": "Relance prévue aujourd'hui",
+			"intro": "Tu avais prévu de relancer {clientName} ({company}) aujourd'hui.",
+			"original_label": "Échange initial",
+			"original_value": "{eventTypeName} · {date}",
+			"notes_label": "Tes notes",
+			"cta": "Voir le prospect"
+		},
+		"recovery": {
+			"subject": "Vous avez commencé une réservation",
+			"title": "Vous y étiez presque !",
+			"body": "Vous avez commencé à réserver un appel mais ne l'avez pas finalisé. Reprenez quand vous voulez, ça ne prend qu'une minute.",
+			"cta": "Reprendre ma réservation"
 		},
 		"notification": {
 			"subject": "Nouvelle réservation — {clientName} ({eventTypeName})",

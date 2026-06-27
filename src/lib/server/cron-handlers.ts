@@ -1,7 +1,20 @@
 import { db } from '$lib/server/db';
-import { bookings, briefs, userSettings } from '$lib/server/db/schema';
-import { and, eq, gte, inArray, isNull, lt, lte } from 'drizzle-orm';
-import { sendReminderToClient, sendPhoneRevealToFreelance } from '$lib/server/resend';
+import {
+	bookings,
+	briefs,
+	eventTypes,
+	prospectInsights,
+	prospectTracking,
+	userSettings
+} from '$lib/server/db/schema';
+import { and, eq, gt, gte, inArray, isNotNull, isNull, lt, lte } from 'drizzle-orm';
+import {
+	sendReminderToClient,
+	sendSecondReminderToClient,
+	sendPhoneRevealToFreelance,
+	sendFollowupToFreelance,
+	sendRecoveryToClient
+} from '$lib/server/resend';
 import { updateCalendarEvent } from '$lib/server/google';
 import { phoneCallLocation } from '$lib/server/phone-location';
 import type { Locale } from '$lib/paraglide/runtime';
@@ -42,6 +55,62 @@ export async function sendReminders(): Promise<void> {
 			.update(bookings)
 			.set({ reminderSentAt: new Date() })
 			.where(inArray(bookings.id, sentIds));
+	}
+}
+
+// Email the freelance when a prospect they marked "followup" reaches its due date.
+export async function sendFollowupReminders(): Promise<void> {
+	const now = new Date();
+
+	const due = await db
+		.select({
+			bookingId: prospectTracking.bookingId,
+			notes: prospectTracking.notes,
+			followupDate: prospectTracking.followupDate,
+			clientName: bookings.clientName,
+			clientEmail: bookings.clientEmail,
+			eventTypeName: eventTypes.name,
+			startTime: bookings.startTime,
+			rescheduleToken: bookings.rescheduleToken,
+			company: prospectInsights.company,
+			notificationEmail: userSettings.notificationEmail,
+			preferredLocale: userSettings.preferredLocale
+		})
+		.from(prospectTracking)
+		.innerJoin(bookings, eq(prospectTracking.bookingId, bookings.id))
+		.innerJoin(eventTypes, eq(bookings.eventTypeId, eventTypes.id))
+		.leftJoin(prospectInsights, eq(prospectInsights.bookingId, bookings.id))
+		.leftJoin(userSettings, eq(userSettings.userId, bookings.userId))
+		.where(
+			and(
+				eq(prospectTracking.outcome, 'followup'),
+				isNull(prospectTracking.followupNotifiedAt),
+				isNotNull(prospectTracking.followupDate),
+				lte(prospectTracking.followupDate, now)
+			)
+		);
+
+	for (const f of due) {
+		try {
+			await sendFollowupToFreelance({
+				clientName: f.clientName,
+				clientEmail: f.clientEmail,
+				company: f.company,
+				eventTypeName: f.eventTypeName,
+				originalDate: f.startTime,
+				notes: f.notes,
+				bookingId: f.bookingId,
+				notificationEmail: f.notificationEmail ?? undefined,
+				locale: (f.preferredLocale as Locale) ?? 'fr'
+			});
+
+			await db
+				.update(prospectTracking)
+				.set({ followupNotifiedAt: new Date() })
+				.where(eq(prospectTracking.bookingId, f.bookingId));
+		} catch (err) {
+			console.error(`Failed to send followup reminder for booking ${f.bookingId}:`, err);
+		}
 	}
 }
 

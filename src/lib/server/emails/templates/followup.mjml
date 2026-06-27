@@ -1,0 +1,93 @@
+<mjml>
+	<mj-head>
+		<mj-font
+			name="Plus Jakarta Sans"
+			href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap"
+		/>
+		<mj-font
+			name="Lora"
+			href="https://fonts.googleapis.com/css2?family=Lora:wght@600&display=swap"
+		/>
+		<mj-attributes>
+			<mj-all font-family="'Plus Jakarta Sans', sans-serif" />
+			<mj-text font-size="15px" line-height="1.6" color="#3c2010" padding="0" />
+			<mj-section padding="0" />
+			<mj-column padding="0" background-color="transparent" />
+		</mj-attributes>
+	</mj-head>
+
+	<mj-body background-color="#eee8dc">
+		<mj-section padding="36px 0 0" />
+
+		<!-- Brand -->
+		<mj-section padding="0 24px 14px">
+			<mj-column>
+				<mj-text font-size="13px" font-weight="600" color="#c06428" letter-spacing="0.06em">
+					Fenêtre
+				</mj-text>
+			</mj-column>
+		</mj-section>
+
+		<!-- Card -->
+		<mj-section padding="0 24px">
+			<mj-column
+				background-color="#f4f0e8"
+				border-radius="16px"
+				border="1px solid #d4c8b4"
+				padding="36px 32px"
+			>
+				<mj-text
+					font-size="18px"
+					font-weight="500"
+					padding-bottom="12px"
+					font-family="'Lora', Georgia, serif"
+				>
+					{{ title }}
+				</mj-text>
+
+				<mj-text font-size="15px" padding-bottom="20px">
+					{{ intro }}
+				</mj-text>
+
+				<mj-text font-size="13px" color="#9e7e64" padding-bottom="2px">
+					{{ originalLabel }}
+				</mj-text>
+				<mj-text font-size="15px" font-weight="500" padding-bottom="20px">
+					{{ originalValue }}
+				</mj-text>
+
+				{{#if notesLabel}}
+				<mj-text font-size="13px" color="#9e7e64" padding-bottom="2px">
+					{{ notesLabel }}
+				</mj-text>
+				<mj-text font-size="14px" color="#7a4e30" font-style="italic" padding-bottom="28px">
+					{{ notes }}
+				</mj-text>
+				{{/if}}
+
+				<mj-button
+					href="{{bookingUrl}}"
+					background-color="#c06428"
+					color="#faf8f4"
+					border-radius="12px"
+					font-size="14px"
+					font-weight="600"
+					inner-padding="12px 28px"
+					padding-bottom="0"
+					align="left"
+				>
+					{{ cta }} →
+				</mj-button>
+			</mj-column>
+		</mj-section>
+
+		<!-- Footer -->
+		<mj-section padding="20px 24px 36px">
+			<mj-column>
+				<mj-text font-size="12px" color="#9e7e64" align="center" padding="0">
+					{{ footer }}
+				</mj-text>
+			</mj-column>
+		</mj-section>
+	</mj-body>
+</mjml>

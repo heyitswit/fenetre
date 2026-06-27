@@ -445,6 +445,12 @@ const OUTCOME_STATUS: Record<string, 'cancelled' | 'completed' | null> = {
 };
 
 export const updateBookingOutcome = command(
+	z.object({
+		bookingId: z.string().uuid(),
+		outcome: z.string(),
+		notes: z.string().optional(),
+		followupDate: z.string().optional()
+	}),
 	async (input) => {
 		const user = requireAuth();
 		const { prospectTracking } = await import('$lib/server/db/schema');
@@ -454,10 +460,28 @@ export const updateBookingOutcome = command(
 		});
 		if (!booking) error(404, 'Booking not found');
 
+		// Only "followup" carries a date; reset the notified flag so the cron re-arms on a new date
+		const followupDate =
+			input.outcome === 'followup' && input.followupDate ? new Date(input.followupDate) : null;
+
 		await db
 			.insert(prospectTracking)
+			.values({
+				bookingId: booking.id,
+				outcome: input.outcome,
+				notes: input.notes,
+				followupDate,
+				followupNotifiedAt: null
+			})
 			.onConflictDoUpdate({
 				target: prospectTracking.bookingId,
+				set: {
+					outcome: input.outcome,
+					notes: input.notes,
+					followupDate,
+					followupNotifiedAt: null,
+					updatedAt: new Date()
+				}
 			});
 
 		const newStatus = OUTCOME_STATUS[input.outcome] ?? null;
