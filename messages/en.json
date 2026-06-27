@@ -273,6 +273,8 @@
 	"admin.settings.locale.description": "Notifications you receive will be in this language, regardless of the client's.",
 	"admin.settings.buffer.title": "Buffer between appointments (min)",
 	"admin.settings.buffer.description": "Protected time before and after each appointment.",
+	"admin.settings.timezone.title": "Timezone",
+	"admin.settings.timezone.description": "Your availability hours are interpreted in this timezone.",
 	"admin.settings.portfolio.title": "Portfolio links",
 	"admin.settings.portfolio.description": "Shown on the confirmation page after booking, filterable by mission type.",
 	"admin.settings.portfolio.add": "Add a link",

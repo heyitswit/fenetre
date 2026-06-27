@@ -11,6 +11,7 @@ import {
 } from '$lib/server/event-types-cache';
 import { getBusySlots } from '$lib/server/google';
 import { and, asc, eq, getTableColumns, gte, ne } from 'drizzle-orm';
+import { CalendarDateTime, parseDate, toZoned } from '@internationalized/date';
 
 const DAYS_AHEAD = 30;
 
@@ -37,7 +38,7 @@ async function resolveEventType(username: string, slug: string) {
 export async function loadEventTypeBySlug(username: string, slug: string) {
 	const et = await resolveEventType(username, slug);
 	if (!et) return null;
-	const { bufferMinutes: _bufferMinutes, ...publicEventType } = et;
+	const { bufferMinutes: _bufferMinutes, timezone: _timezone, ...publicEventType } = et;
 	return publicEventType;
 }
 
@@ -49,6 +50,7 @@ export async function loadAvailableSlots(
 	if (!row) return {};
 
 	const { userId, bufferMinutes } = row;
+	const timezone = row.timezone ?? 'Europe/Paris';
 
 	const now = new Date();
 	const horizon = new Date(now.getTime() + DAYS_AHEAD * 24 * 60 * 60 * 1000);
@@ -68,7 +70,11 @@ export async function loadAvailableSlots(
 			.select()
 			.from(bookings)
 			.where(
-				and(eq(bookings.userId, userId), gte(bookings.startTime, now), ne(bookings.status, 'cancelled'))
+				and(
+					eq(bookings.userId, userId),
+					gte(bookings.startTime, now),
+					ne(bookings.status, 'cancelled')
+				)
 			),
 		getBusySlots(userId, now, horizon)
 	]);
@@ -77,21 +83,38 @@ export async function loadAvailableSlots(
 
 	const slots: Record<string, { start: string; end: string }[]> = {};
 
-	for (let d = new Date(now); d <= horizon; d.setDate(d.getDate() + 1)) {
-		const dayOfWeek = d.getDay();
+	// Availability hours ("09:00") are wall-clock times in the freelance's timezone, so we
+	// anchor each day in that zone (DST-safe via toZoned) rather than the server's local time.
+	const todayInTz = parseDate(
+		new Intl.DateTimeFormat('en-CA', {
+			timeZone: timezone,
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit'
+		}).format(now)
+	);
+
+	for (let offset = 0; offset <= DAYS_AHEAD; offset++) {
+		const day = todayInTz.add({ days: offset });
+		// A calendar date's weekday is timezone-independent
+		const dayOfWeek = new Date(Date.UTC(day.year, day.month - 1, day.day)).getUTCDay();
 		const rule = availabilityRows.find((a) => a.dayOfWeek === dayOfWeek);
 		if (!rule) continue;
 
 		const [startHour, startMin] = rule.startTime.split(':').map(Number);
 		const [endHour, endMin] = rule.endTime.split(':').map(Number);
 
-		const dayStart = new Date(d);
-		dayStart.setHours(startHour, startMin, 0, 0);
-		const dayEnd = new Date(d);
-		dayEnd.setHours(endHour, endMin, 0, 0);
+		const dayStart = toZoned(
+			new CalendarDateTime(day.year, day.month, day.day, startHour, startMin),
+			timezone
+		).toDate();
+		const dayEnd = toZoned(
+			new CalendarDateTime(day.year, day.month, day.day, endHour, endMin),
+			timezone
+		).toDate();
 
 		const cursor = new Date(dayStart);
-		const dateKey = d.toISOString().slice(0, 10);
+		const dateKey = day.toString();
 		slots[dateKey] = [];
 
 		while (cursor.getTime() + row.duration * 60_000 <= dayEnd.getTime()) {
@@ -172,7 +195,8 @@ async function fetchBySlug(username: string, slug: string) {
 		.select({
 			...getTableColumns(eventTypes),
 			hostName: user.name,
-			bufferMinutes: userSettings.bufferMinutes
+			bufferMinutes: userSettings.bufferMinutes,
+			timezone: userSettings.timezone
 		})
 		.from(eventTypes)
 		.innerJoin(userSettings, eq(eventTypes.userId, userSettings.userId))

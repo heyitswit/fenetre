@@ -273,6 +273,8 @@
 	"admin.settings.locale.description": "Les notifications que vous recevez seront dans cette langue, indépendamment de celle du client.",
 	"admin.settings.buffer.title": "Buffer entre les RDV (min)",
 	"admin.settings.buffer.description": "Temps protégé avant et après chaque rendez-vous.",
+	"admin.settings.timezone.title": "Fuseau horaire",
+	"admin.settings.timezone.description": "Vos heures de disponibilité sont interprétées dans ce fuseau.",
 	"admin.settings.portfolio.title": "Liens portfolio",
 	"admin.settings.portfolio.description": "Affichés sur la page de confirmation après réservation, filtrables par type de mission.",
 	"admin.settings.portfolio.add": "Ajouter un lien",

@@ -16,7 +16,10 @@
 	import { getSettings, updateSettings } from '$lib/remote/settings.remote';
 	import { authClient } from '$lib/auth-client';
 	import { locales, type Locale } from '$lib/paraglide/runtime';
+	import { listTimezones } from '$lib/timezones';
 	import type { PortfolioLink } from '$lib/server/db/schema';
+
+	const timezones = listTimezones();
 
 	const eventTypes = $derived(await getAllEventTypes());
 	const busyMode = $derived(eventTypes.some((et) => et.isBusyMode));
@@ -53,6 +56,7 @@
 	let username = $state('');
 	let notificationEmail = $state('');
 	let bufferMinutes = $state(15);
+	let timezone = $state('Europe/Paris');
 	let preferredLocale = $state<Locale>('fr');
 	let portfolioLinks = $state<PortfolioLink[]>([]);
 
@@ -60,6 +64,7 @@
 		username = settings.username ?? '';
 		notificationEmail = settings.notificationEmail ?? '';
 		bufferMinutes = settings.bufferMinutes;
+		timezone = settings.timezone ?? 'Europe/Paris';
 		preferredLocale = (settings.preferredLocale as Locale) ?? 'fr';
 		portfolioLinks = settings.portfolioLinks ?? [];
 	});
@@ -100,6 +105,7 @@
 				username: username || undefined,
 				notificationEmail: notificationEmail || null,
 				bufferMinutes,
+				timezone,
 				preferredLocale,
 				portfolioLinks
 			});
@@ -216,7 +222,13 @@
 					<p class="mb-2 text-sm text-muted-foreground">
 						{m['admin.settings.locale.description']()}
 					</p>
-					<Select.Root type="single" value={preferredLocale} onValueChange={(v) => { preferredLocale = v as Locale; }}>
+					<Select.Root
+						type="single"
+						value={preferredLocale}
+						onValueChange={(v) => {
+							preferredLocale = v as Locale;
+						}}
+					>
 						<Select.Trigger class="w-40">
 							{localeLabel(preferredLocale)}
 						</Select.Trigger>
@@ -233,6 +245,26 @@
 						{m['admin.settings.buffer.description']()}
 					</p>
 					<Input type="number" bind:value={bufferMinutes} min={0} max={120} class="w-32" />
+				</Field>
+				<Field>
+					<FieldLabel>{m['admin.settings.timezone.title']()}</FieldLabel>
+					<p class="mb-2 text-sm text-muted-foreground">
+						{m['admin.settings.timezone.description']()}
+					</p>
+					<Select.Root
+						type="single"
+						value={timezone}
+						onValueChange={(v: string) => {
+							timezone = v;
+						}}
+					>
+						<Select.Trigger class="w-72">{timezone}</Select.Trigger>
+						<Select.Content class="max-h-72 overflow-y-auto">
+							{#each timezones as tz}
+								<Select.Item value={tz}>{tz}</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
 				</Field>
 			</FieldGroup>
 		</Card.Content>
