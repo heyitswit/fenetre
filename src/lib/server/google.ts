@@ -109,27 +109,34 @@ export async function createCalendarEvent(
 		startTime: Date;
 		endTime: Date;
 		attendeeEmail: string;
+		// 'phone' skips Google Meet creation; the client number is injected later (see reveal cron)
+		locationType?: 'meet' | 'phone';
+		location?: string;
 	}
 ): Promise<{ eventId: string; meetLink: string | null }> {
 	const { calendar, calendarId } = await getCalendarClient(userId);
+	const isPhone = event.locationType === 'phone';
 
 	const res = await calendar.events.insert({
 		calendarId,
-		conferenceDataVersion: 1,
+		conferenceDataVersion: isPhone ? 0 : 1,
 		requestBody: {
 			summary: event.summary,
 			description: event.description,
+			location: event.location,
 			start: { dateTime: event.startTime.toISOString() },
 			end: { dateTime: event.endTime.toISOString() },
 			attendees: [{ email: event.attendeeEmail }],
-			conferenceData: { createRequest: { requestId: crypto.randomUUID() } }
+			...(isPhone ? {} : { conferenceData: { createRequest: { requestId: crypto.randomUUID() } } })
 		}
 	});
 
 	if (!res.data.id) throw new Error('Failed to create Google Calendar event');
 
-	const meetLink =
-		res.data.conferenceData?.entryPoints?.find((e) => e.entryPointType === 'video')?.uri ?? null;
+	const meetLink = isPhone
+		? null
+		: (res.data.conferenceData?.entryPoints?.find((e) => e.entryPointType === 'video')?.uri ??
+			null);
 
 	return { eventId: res.data.id, meetLink };
 }
@@ -142,7 +149,7 @@ export async function deleteCalendarEvent(userId: string, googleEventId: string)
 export async function updateCalendarEvent(
 	userId: string,
 	googleEventId: string,
-	patch: { startTime: Date; endTime: Date }
+	patch: { startTime?: Date; endTime?: Date; location?: string }
 ): Promise<void> {
 	const { calendar, calendarId } = await getCalendarClient(userId);
 
@@ -150,8 +157,9 @@ export async function updateCalendarEvent(
 		calendarId,
 		eventId: googleEventId,
 		requestBody: {
-			start: { dateTime: patch.startTime.toISOString() },
-			end: { dateTime: patch.endTime.toISOString() }
+			...(patch.startTime ? { start: { dateTime: patch.startTime.toISOString() } } : {}),
+			...(patch.endTime ? { end: { dateTime: patch.endTime.toISOString() } } : {}),
+			...(patch.location !== undefined ? { location: patch.location } : {})
 		}
 	});
 }

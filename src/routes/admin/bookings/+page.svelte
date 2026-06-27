@@ -16,7 +16,7 @@
 		updateBookingOutcome
 	} from '$lib/remote/bookings.remote';
 	import { formatDate, formatTime } from '$lib/utils';
-	import { Video } from '@lucide/svelte';
+	import { Phone, Video } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import { fade } from 'svelte/transition';
 
@@ -34,6 +34,15 @@
 		if (!selected) return;
 		outcomeNotes = selected.tracking?.notes ?? '';
 	});
+
+	// Mirror the delayed-reveal: number stays hidden until the reveal cron runs (~30 min before)
+	function phoneVisible(b: { phoneRevealedAt: Date | null; startTime: Date }): boolean {
+		return !!b.phoneRevealedAt || b.startTime.getTime() - Date.now() <= 30 * 60 * 1000;
+	}
+
+	function telHref(phone: string): string {
+		return `tel:${phone.replace(/[^\d+]/g, '')}`;
+	}
 
 	const filtered = $derived(
 		bookings.filter((b) => {
@@ -215,6 +224,18 @@
 							{#if selected.source}
 								<p>{m['admin.bookings.source']()} {selected.source}</p>
 							{/if}
+							{#if selected.eventType.locationType === 'phone'}
+								<p>
+									{m['admin.bookings.phone']()}
+									{#if phoneVisible(selected) && selected.clientPhone}
+										<a href={telHref(selected.clientPhone)} class="text-primary hover:underline">
+											{selected.clientPhone}
+										</a>
+									{:else}
+										<span class="italic">{m['admin.bookings.phone.pending']()}</span>
+									{/if}
+								</p>
+							{/if}
 						</Card.Content>
 						{#if selected.meetLink}
 							<Card.Footer>
@@ -228,6 +249,18 @@
 								>
 									<Video class="size-3.5" />
 									Google Meet
+								</Button>
+							</Card.Footer>
+						{:else if selected.eventType.locationType === 'phone' && phoneVisible(selected) && selected.clientPhone}
+							<Card.Footer>
+								<Button
+									href={telHref(selected.clientPhone)}
+									variant="outline"
+									size="sm"
+									class="gap-2"
+								>
+									<Phone class="size-3.5" />
+									{m['admin.bookings.call']()}
 								</Button>
 							</Card.Footer>
 						{/if}

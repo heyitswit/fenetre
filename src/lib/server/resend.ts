@@ -5,7 +5,8 @@ import {
 	confirmationEmail,
 	reminderEmail,
 	notificationEmail,
-	passwordResetEmail
+	passwordResetEmail,
+	phoneRevealEmail
 } from '$lib/server/emails';
 import type { Locale } from '$lib/paraglide/runtime';
 import type { InferSelectModel } from 'drizzle-orm';
@@ -47,6 +48,7 @@ export async function sendConfirmationToClient(booking: BookingWithRelations): P
 		durationMin: booking.eventType.duration,
 		startTime: booking.startTime,
 		meetLink: booking.meetLink ?? null,
+		isPhoneCall: booking.eventType.locationType === 'phone',
 		rescheduleUrl: `${env.ORIGIN}/reschedule/${booking.rescheduleToken}`,
 		locale: booking.locale as Locale
 	});
@@ -75,10 +77,34 @@ export async function sendNotificationToFreelance(
 		eventTypeName: booking.eventType.name,
 		startTime: booking.startTime,
 		meetLink: booking.meetLink ?? null,
+		isPhoneCall: booking.eventType.locationType === 'phone',
 		locale: freelanceLocale ?? (booking.locale as Locale),
 		brief: booking.brief ?? null,
 		pappers,
 		aiResult
+	});
+
+	await resend.emails.send({
+		from: FROM,
+		to: notificationEmailAddress ?? FROM,
+		subject,
+		html
+	});
+}
+
+export async function sendPhoneRevealToFreelance(
+	booking: BookingWithRelations,
+	notificationEmailAddress?: string,
+	freelanceLocale?: Locale
+): Promise<void> {
+	if (!booking.clientPhone) return;
+
+	const { subject, html } = phoneRevealEmail({
+		clientName: booking.clientName,
+		clientPhone: booking.clientPhone,
+		startTime: booking.startTime,
+		rescheduleUrl: `${env.ORIGIN}/reschedule/${booking.rescheduleToken}`,
+		locale: freelanceLocale ?? (booking.locale as Locale)
 	});
 
 	await resend.emails.send({

@@ -28,6 +28,11 @@ cron.schedule('0 8 * * *', () => {
 	callEndpoint('/api/cron/send-reminders');
 });
 
+// Reveal client phone numbers ~30 min before phone calls — every 5 min
+cron.schedule('*/5 * * * *', () => {
+	callEndpoint('/api/cron/reveal-phone');
+});
+
 // Mark past bookings as completed — every hour
 cron.schedule('0 * * * *', () => {
 	callEndpoint('/api/cron/mark-completed');
