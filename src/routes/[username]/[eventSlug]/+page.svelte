@@ -118,6 +118,7 @@
 			}
 
 			const result = await saveBrief({
+				username,
 				clientEmail: email,
 				companyName: values['companyName'] || undefined,
 				projectDescription: values['projectDescription'] || undefined,

@@ -114,6 +114,47 @@ export async function sendFollowupReminders(): Promise<void> {
 	}
 }
 
+// Nudge clients who started a brief but never picked a slot — once, between 1h and 48h after.
+export async function recoverAbandonedBriefs(): Promise<void> {
+	const now = new Date();
+	const minAge = new Date(now.getTime() - 60 * 60 * 1000);
+	const maxAge = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+
+	const candidates = await db
+		.select({
+			briefId: briefs.id,
+			clientEmail: briefs.clientEmail,
+			username: userSettings.username,
+			preferredLocale: userSettings.preferredLocale
+		})
+		.from(briefs)
+		.innerJoin(userSettings, eq(briefs.userId, userSettings.userId))
+		.where(
+			and(
+				isNull(briefs.bookingId),
+				isNull(briefs.recoverySentAt),
+				eq(briefs.isAbandoned, false),
+				lt(briefs.createdAt, minAge),
+				gt(briefs.createdAt, maxAge),
+				isNotNull(briefs.projectDescription)
+			)
+		);
+
+	for (const c of candidates) {
+		try {
+			await sendRecoveryToClient({
+				clientEmail: c.clientEmail,
+				username: c.username,
+				locale: (c.preferredLocale as Locale) ?? 'fr'
+			});
+
+			await db.update(briefs).set({ recoverySentAt: new Date() }).where(eq(briefs.id, c.briefId));
+		} catch (err) {
+			console.error(`Failed to send recovery for brief ${c.briefId}:`, err);
+		}
+	}
+}
+
 export async function markCompleted(): Promise<void> {
 	await db
 		.update(bookings)

@@ -185,6 +185,7 @@ export const getBookingById = query(z.object({ id: z.string().uuid() }), async (
 
 export const saveBrief = command(
 	z.object({
+		username: z.string(),
 		clientEmail: z.email(),
 		companyName: z.string().optional(),
 		projectDescription: z.string().optional(),
@@ -195,7 +196,17 @@ export const saveBrief = command(
 		customFields: z.record(z.string(), z.string()).optional(),
 		companySiren: z.string().optional()
 	}),
+	async ({ username, ...input }) => {
 		if (await formLimiter.isLimited(getRequestEvent())) error(429, 'Too many requests');
+		const [owner] = await db
+			.select({ userId: userSettings.userId })
+			.from(userSettings)
+			.where(eq(userSettings.username, username))
+			.limit(1);
+		const [brief] = await db
+			.insert(briefs)
+			.values({ ...input, userId: owner?.userId ?? null })
+			.returning();
 		return { briefId: brief.id };
 	}
 );
