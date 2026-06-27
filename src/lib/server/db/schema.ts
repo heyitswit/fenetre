@@ -56,6 +56,7 @@ export const eventTypes = pgTable(
 		duration: integer('duration').notNull(), // minutes
 		isActive: boolean('is_active').default(true).notNull(),
 		isBusyMode: boolean('is_busy_mode').default(false).notNull(),
+		locationType: text('location_type').notNull().default('meet'), // meet | phone
 		color: text('color').default('#6366f1'),
 		sortOrder: integer('sort_order').default(0),
 		formFields: jsonb('form_fields').$type<FormField[] | null>(),
@@ -95,6 +96,7 @@ export const bookings = pgTable(
 		clientName: text('client_name').notNull(),
 		clientEmail: text('client_email').notNull(),
 		clientLinkedin: text('client_linkedin'),
+		clientPhone: text('client_phone'), // collected when the event type is a phone call
 		startTime: timestamp('start_time').notNull(),
 		endTime: timestamp('end_time').notNull(),
 		status: text('status').default('confirmed').notNull(), // confirmed | cancelled | rescheduled | completed
@@ -104,6 +106,8 @@ export const bookings = pgTable(
 		rescheduleToken: text('reschedule_token').unique(),
 		locale: text('locale').notNull().default('fr'),
 		reminderSentAt: timestamp('reminder_sent_at'),
+		// Set once the client's phone number has been revealed to the freelance (~30 min before a phone call)
+		phoneRevealedAt: timestamp('phone_revealed_at'),
 		createdAt: timestamp('created_at').defaultNow().notNull()
 	},
 	(t) => [
