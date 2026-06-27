@@ -5,6 +5,7 @@ import {
 	briefs,
 	eventTypes,
 	prospectInsights,
+	prospectTracking,
 	userSettings
 } from '$lib/server/db/schema';
 import { loadBookingConfirmation, loadBookingByToken } from '$lib/server/public-queries';
@@ -88,6 +89,72 @@ export const getDashboardStats = query(async () => {
 	};
 });
 
+type ConversionRow = { total: number; signed: number };
+function emptyRow(): ConversionRow {
+	return { total: 0, signed: 0 };
+}
+
+// Closes the loop the AI score opens: which sources and which score bands actually sign.
+export const getConversionAnalytics = query(async () => {
+	const user = requireAuth();
+	const rows = await db
+		.select({
+			source: bookings.source,
+			outcome: prospectTracking.outcome,
+			score: prospectInsights.compatibilityScore
+		})
+		.from(bookings)
+		.leftJoin(prospectTracking, eq(prospectTracking.bookingId, bookings.id))
+		.leftJoin(prospectInsights, eq(prospectInsights.bookingId, bookings.id))
+		.where(eq(bookings.userId, user.id));
+
+	const totals = { total: 0, signed: 0, declined: 0, ghost: 0, followup: 0, pending: 0 };
+	const bySource = new Map<string, ConversionRow>();
+	const byScoreBand = new Map<string, ConversionRow>();
+
+	const scoreBand = (score: number | null): string => {
+		if (score === null) return 'unscored';
+		if (score >= 80) return 'high';
+		if (score >= 50) return 'mid';
+		return 'low';
+	};
+
+	for (const r of rows) {
+		const outcome = r.outcome ?? 'pending';
+		const signed = outcome === 'signed' ? 1 : 0;
+
+		totals.total++;
+		if (outcome in totals) (totals as Record<string, number>)[outcome]++;
+
+		const src = r.source ?? 'direct';
+		const sRow = bySource.get(src) ?? emptyRow();
+		sRow.total++;
+		sRow.signed += signed;
+		bySource.set(src, sRow);
+
+		const band = scoreBand(r.score);
+		const bRow = byScoreBand.get(band) ?? emptyRow();
+		bRow.total++;
+		bRow.signed += signed;
+		byScoreBand.set(band, bRow);
+	}
+
+	const withRate = (m: Map<string, ConversionRow>) =>
+		[...m.entries()]
+			.map(([key, v]) => ({
+				key,
+				...v,
+				rate: v.total ? Math.round((v.signed / v.total) * 100) : 0
+			}))
+			.sort((a, b) => b.total - a.total);
+
+	return {
+		totals,
+		bySource: withRate(bySource),
+		byScoreBand: withRate(byScoreBand)
+	};
+});
+
 export const getAllBookings = query(async () => {
 	const user = requireAuth();
 	const rows = await db.query.bookings.findMany({
@@ -128,9 +195,7 @@ export const saveBrief = command(
 		customFields: z.record(z.string(), z.string()).optional(),
 		companySiren: z.string().optional()
 	}),
-	async (input) => {
 		if (await formLimiter.isLimited(getRequestEvent())) error(429, 'Too many requests');
-		const [brief] = await db.insert(briefs).values(input).returning();
 		return { briefId: brief.id };
 	}
 );
@@ -380,7 +445,6 @@ const OUTCOME_STATUS: Record<string, 'cancelled' | 'completed' | null> = {
 };
 
 export const updateBookingOutcome = command(
-	z.object({ bookingId: z.string().uuid(), outcome: z.string(), notes: z.string().optional() }),
 	async (input) => {
 		const user = requireAuth();
 		const { prospectTracking } = await import('$lib/server/db/schema');
@@ -392,10 +456,8 @@ export const updateBookingOutcome = command(
 
 		await db
 			.insert(prospectTracking)
-			.values({ bookingId: booking.id, outcome: input.outcome, notes: input.notes })
 			.onConflictDoUpdate({
 				target: prospectTracking.bookingId,
-				set: { outcome: input.outcome, notes: input.notes, updatedAt: new Date() }
 			});
 
 		const newStatus = OUTCOME_STATUS[input.outcome] ?? null;

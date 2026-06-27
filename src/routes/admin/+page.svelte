@@ -8,14 +8,34 @@
 	import { CalendarDays, Clock, TrendingUp } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { formatDate, formatTime } from '$lib/utils';
-	import { getDashboardStats, getUpcomingBookings } from '$lib/remote/bookings.remote';
+	import {
+		getConversionAnalytics,
+		getDashboardStats,
+		getUpcomingBookings
+	} from '$lib/remote/bookings.remote';
 	import { getAllEventTypes, setBusyModeAll } from '$lib/remote/eventTypes.remote';
 
 	const upcomingBookings = $derived(await getUpcomingBookings());
 	const allEventTypes = $derived(await getAllEventTypes());
 	const stats = $derived(await getDashboardStats());
+	const analytics = $derived(await getConversionAnalytics());
 
 	const busyMode = $derived(allEventTypes.some((et) => et.isBusyMode));
+
+	const SCORE_BAND_LABELS: Record<string, () => string> = {
+		high: m['admin.dashboard.analytics.score.high'],
+		mid: m['admin.dashboard.analytics.score.mid'],
+		low: m['admin.dashboard.analytics.score.low'],
+		unscored: m['admin.dashboard.analytics.score.unscored']
+	};
+
+	function sourceLabel(key: string) {
+		return key.charAt(0).toUpperCase() + key.slice(1);
+	}
+
+	function scoreBandLabel(key: string) {
+		return SCORE_BAND_LABELS[key]?.() ?? key;
+	}
 
 	const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -79,6 +99,67 @@
 			</Card.Content>
 		</Card.Root>
 	</div>
+
+	<Card.Root>
+		<Card.Header>
+			<Card.Title class="text-base">{m['admin.dashboard.analytics.title']()}</Card.Title>
+			<Card.Description>{m['admin.dashboard.analytics.subtitle']()}</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			{#if analytics.totals.total === 0}
+				<p class="text-sm text-muted-foreground">{m['admin.dashboard.analytics.empty']()}</p>
+			{:else}
+				<div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+					<div>
+						<p class="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+							{m['admin.dashboard.analytics.by_source']()}
+						</p>
+						<div class="flex flex-col gap-3">
+							{#each analytics.bySource as row}
+								<div>
+									<div class="mb-1 flex items-center justify-between text-sm">
+										<span>{sourceLabel(row.key)}</span>
+										<span class="text-muted-foreground">
+											{m['admin.dashboard.analytics.signed_total']({
+												signed: row.signed,
+												total: row.total
+											})} · {row.rate}%
+										</span>
+									</div>
+									<div class="h-1.5 w-full rounded-full bg-muted">
+										<div class="h-1.5 rounded-full bg-primary" style="width: {row.rate}%"></div>
+									</div>
+								</div>
+							{/each}
+						</div>
+					</div>
+					<div>
+						<p class="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+							{m['admin.dashboard.analytics.by_score']()}
+						</p>
+						<div class="flex flex-col gap-3">
+							{#each analytics.byScoreBand as row}
+								<div>
+									<div class="mb-1 flex items-center justify-between text-sm">
+										<span>{scoreBandLabel(row.key)}</span>
+										<span class="text-muted-foreground">
+											{m['admin.dashboard.analytics.signed_total']({
+												signed: row.signed,
+												total: row.total
+											})} · {row.rate}%
+										</span>
+									</div>
+									<div class="h-1.5 w-full rounded-full bg-muted">
+										<div class="h-1.5 rounded-full bg-primary" style="width: {row.rate}%"></div>
+									</div>
+								</div>
+							{/each}
+						</div>
+					</div>
+				</div>
+			{/if}
+		</Card.Content>
+	</Card.Root>
 
 	<div>
 		<h2 class="mb-4 text-lg font-semibold">{m['admin.dashboard.next_bookings']()}</h2>
