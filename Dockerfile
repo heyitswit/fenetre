@@ -26,7 +26,8 @@ COPY --from=builder /app/scripts ./scripts
 
 EXPOSE ${PORT:-3000}
 ENV NODE_ENV=production
-ENV HOST=0.0.0.0
+# Bind dual-stack (::) so Railway's IPv6-only private network can reach the app
+ENV HOST=::
 
 # Run pending migrations before starting the app; abort boot if they fail
 CMD ["sh", "-c", "bun run ./scripts/migrate.ts && bun ./build/index.js"]
