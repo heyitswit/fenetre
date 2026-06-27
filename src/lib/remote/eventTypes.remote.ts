@@ -19,9 +19,8 @@ const FormFieldSchema = z.object({
 	placeholder: z.string().optional()
 });
 
-export const getActiveEventTypes = query(
-	z.object({ username: z.string() }),
-	async ({ username }) => loadActiveEventTypes(username)
+export const getActiveEventTypes = query(z.object({ username: z.string() }), async ({ username }) =>
+	loadActiveEventTypes(username)
 );
 
 export const getEventTypeBySlug = query(
@@ -44,6 +43,7 @@ export const createEventType = command(
 		name: z.string().min(1),
 		description: z.string().optional(),
 		duration: z.number().int().positive(),
+		locationType: z.enum(['meet', 'phone']).optional(),
 		color: z.string().optional(),
 		sortOrder: z.number().int().optional(),
 		formFields: z.array(FormFieldSchema).optional()
@@ -69,6 +69,7 @@ export const updateEventType = command(
 		duration: z.number().int().positive().optional(),
 		isActive: z.boolean().optional(),
 		isBusyMode: z.boolean().optional(),
+		locationType: z.enum(['meet', 'phone']).optional(),
 		color: z.string().optional(),
 		sortOrder: z.number().int().optional(),
 		formFields: z.array(FormFieldSchema).nullable().optional()

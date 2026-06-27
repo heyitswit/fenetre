@@ -9,12 +9,14 @@ import confirmationSrc from './templates/confirmation.mjml?raw';
 import reminderSrc from './templates/reminder.mjml?raw';
 import notificationSrc from './templates/notification.mjml?raw';
 import resetPasswordSrc from './templates/reset-password.mjml?raw';
+import phoneRevealSrc from './templates/phone-reveal.mjml?raw';
 
 const tpl = {
 	confirmation: Handlebars.compile(confirmationSrc),
 	reminder: Handlebars.compile(reminderSrc),
 	notification: Handlebars.compile(notificationSrc),
-	resetPassword: Handlebars.compile(resetPasswordSrc)
+	resetPassword: Handlebars.compile(resetPasswordSrc),
+	phoneReveal: Handlebars.compile(phoneRevealSrc)
 };
 
 function toHtml(compiled: HandlebarsTemplateDelegate, data: object): string {
@@ -29,6 +31,7 @@ export interface ConfirmationEmailData {
 	durationMin: number;
 	startTime: Date;
 	meetLink: string | null;
+	isPhoneCall?: boolean;
 	rescheduleUrl: string;
 	locale: Locale;
 }
@@ -47,6 +50,7 @@ export function confirmationEmail(data: ConfirmationEmailData): { subject: strin
 			time: formatTime(data.startTime, data.locale),
 			meetLink: data.meetLink,
 			meetLabel: m['email.confirmation.meet']({}, l),
+			phoneNote: data.isPhoneCall ? m['email.confirmation.phone_note']({}, l) : null,
 			invitePending: m['email.confirmation.invite_pending']({}, l),
 			rescheduleUrl: data.rescheduleUrl,
 			rescheduleLabel: m['email.confirmation.reschedule']({}, l),
@@ -98,6 +102,7 @@ export interface NotificationEmailData {
 	eventTypeName: string;
 	startTime: Date;
 	meetLink: string | null;
+	isPhoneCall?: boolean;
 	locale: Locale;
 	brief: {
 		projectDescription: string | null;
@@ -123,6 +128,36 @@ export function passwordResetEmail(
 			buttonLabel: m['email.reset_password.button']({}, l),
 			resetUrl,
 			expiry: m['email.reset_password.expiry']({}, l),
+			footer: m['email.footer']({}, l)
+		})
+	};
+}
+
+export interface PhoneRevealEmailData {
+	clientName: string;
+	clientPhone: string;
+	startTime: Date;
+	rescheduleUrl: string;
+	locale: Locale;
+}
+
+export function phoneRevealEmail(data: PhoneRevealEmailData): { subject: string; html: string } {
+	const l = { locale: data.locale } as const;
+	const telHref = `tel:${data.clientPhone.replace(/[^\d+]/g, '')}`;
+
+	return {
+		subject: m['email.phone_reveal.subject']({ clientName: data.clientName }, l),
+		html: toHtml(tpl.phoneReveal, {
+			title: m['email.phone_reveal.title']({}, l),
+			intro: m['email.phone_reveal.intro'](
+				{ clientName: data.clientName, time: formatTime(data.startTime, data.locale) },
+				l
+			),
+			phone: data.clientPhone,
+			telHref,
+			callLabel: m['email.phone_reveal.call']({ clientName: data.clientName }, l),
+			rescheduleUrl: data.rescheduleUrl,
+			rescheduleLabel: m['email.phone_reveal.reschedule']({}, l),
 			footer: m['email.footer']({}, l)
 		})
 	};
@@ -155,13 +190,14 @@ export function notificationEmail(data: NotificationEmailData): { subject: strin
 	const l = { locale: data.locale } as const;
 
 	const score = data.aiResult?.compatibilityScore ?? null;
-	const scoreBadge = score !== null
-		? score >= 80
-			? `✓ Bonne compatibilité — ${score}/100`
-			: score >= 50
-				? `~ À évaluer — ${score}/100`
-				: `↓ Faible compatibilité — ${score}/100`
-		: null;
+	const scoreBadge =
+		score !== null
+			? score >= 80
+				? `✓ Bonne compatibilité — ${score}/100`
+				: score >= 50
+					? `~ À évaluer — ${score}/100`
+					: `↓ Faible compatibilité — ${score}/100`
+			: null;
 
 	const aiInsights =
 		data.aiResult || data.pappers
@@ -173,8 +209,18 @@ export function notificationEmail(data: NotificationEmailData): { subject: strin
 					aiAngles: data.aiResult?.aiAngles?.length ? data.aiResult.aiAngles : null,
 					aiOpeningQuestion: data.aiResult?.aiOpeningQuestion ?? null,
 					scoreBadge,
-					scoreBadgeBg: score !== null && score >= 80 ? '#c8f5d8' : score !== null && score >= 50 ? '#fef3c7' : '#f3f4f6',
-					scoreBadgeColor: score !== null && score >= 80 ? '#166534' : score !== null && score >= 50 ? '#92400e' : '#6b7280'
+					scoreBadgeBg:
+						score !== null && score >= 80
+							? '#c8f5d8'
+							: score !== null && score >= 50
+								? '#fef3c7'
+								: '#f3f4f6',
+					scoreBadgeColor:
+						score !== null && score >= 80
+							? '#166534'
+							: score !== null && score >= 50
+								? '#92400e'
+								: '#6b7280'
 				}
 			: null;
 
@@ -195,6 +241,7 @@ export function notificationEmail(data: NotificationEmailData): { subject: strin
 			eventTypeName: data.eventTypeName,
 			date: formatDayLabel(data.startTime, data.locale),
 			meetLink: data.meetLink,
+			phonePending: data.isPhoneCall ? m['email.notification.phone_pending']({}, l) : null,
 			brief: data.brief
 				? {
 						...data.brief,

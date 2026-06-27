@@ -1,6 +1,12 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/server/db';
-import { bookings, briefs, eventTypes, prospectInsights, userSettings } from '$lib/server/db/schema';
+import {
+	bookings,
+	briefs,
+	eventTypes,
+	prospectInsights,
+	userSettings
+} from '$lib/server/db/schema';
 import { loadBookingConfirmation, loadBookingByToken } from '$lib/server/public-queries';
 import {
 	createCalendarEvent,
@@ -9,6 +15,7 @@ import {
 	updateCalendarEvent
 } from '$lib/server/google';
 import { sendConfirmationToClient, sendNotificationToFreelance } from '$lib/server/resend';
+import { phoneCallPlaceholder } from '$lib/server/phone-location';
 import { bookingLimiter, formLimiter } from '$lib/server/limiter';
 import { requireAuth } from '$lib/server/remote-helpers';
 import { getLocale, type Locale } from '$lib/paraglide/runtime';
@@ -16,9 +23,22 @@ import { error } from '@sveltejs/kit';
 import { and, count, desc, eq, getTableColumns, gt, gte, lt, ne } from 'drizzle-orm';
 import * as z from 'zod';
 
+const PHONE_REVEAL_WINDOW_MS = 30 * 60 * 1000;
+
+// Delayed reveal: never ship the client's number to the client (the freelance UI) until the
+// reveal window — even hidden in the UI, anything returned here is visible in the network tab.
+function gatePhone<
+	T extends { clientPhone: string | null; phoneRevealedAt: Date | null; startTime: Date }
+>(booking: T): T {
+	const revealed =
+		booking.phoneRevealedAt != null ||
+		booking.startTime.getTime() - Date.now() <= PHONE_REVEAL_WINDOW_MS;
+	return revealed ? booking : { ...booking, clientPhone: null };
+}
+
 export const getUpcomingBookings = query(async () => {
 	const user = requireAuth();
-	return db.query.bookings.findMany({
+	const rows = await db.query.bookings.findMany({
 		where: and(
 			eq(bookings.userId, user.id),
 			eq(bookings.status, 'confirmed'),
@@ -27,6 +47,7 @@ export const getUpcomingBookings = query(async () => {
 		with: { eventType: true, brief: true },
 		orderBy: bookings.startTime
 	});
+	return rows.map(gatePhone);
 });
 
 export const getDashboardStats = query(async () => {
@@ -69,21 +90,20 @@ export const getDashboardStats = query(async () => {
 
 export const getAllBookings = query(async () => {
 	const user = requireAuth();
-	return db.query.bookings.findMany({
+	const rows = await db.query.bookings.findMany({
 		where: eq(bookings.userId, user.id),
 		with: { eventType: true, brief: true },
 		orderBy: desc(bookings.createdAt)
 	});
+	return rows.map(gatePhone);
 });
 
-export const getBookingConfirmation = query(
-	z.object({ id: z.string().uuid() }),
-	async ({ id }) => loadBookingConfirmation(id)
+export const getBookingConfirmation = query(z.object({ id: z.string().uuid() }), async ({ id }) =>
+	loadBookingConfirmation(id)
 );
 
-export const getBookingByToken = query(
-	z.object({ token: z.string() }),
-	async ({ token }) => loadBookingByToken(token)
+export const getBookingByToken = query(z.object({ token: z.string() }), async ({ token }) =>
+	loadBookingByToken(token)
 );
 
 export const getBookingById = query(z.object({ id: z.string().uuid() }), async ({ id }) => {
@@ -93,7 +113,7 @@ export const getBookingById = query(z.object({ id: z.string().uuid() }), async (
 		with: { eventType: true, brief: true, insights: true, tracking: true }
 	});
 	if (!booking) error(404, 'Booking not found');
-	return booking;
+	return gatePhone(booking);
 });
 
 export const saveBrief = command(
@@ -124,6 +144,7 @@ export const createBooking = command(
 		clientName: z.string().min(2),
 		clientEmail: z.email(),
 		clientLinkedin: z.string().optional(),
+		clientPhone: z.string().optional(),
 		source: z.string().optional()
 	}),
 	async (input) => {
@@ -138,10 +159,16 @@ export const createBooking = command(
 			})
 			.from(eventTypes)
 			.innerJoin(userSettings, eq(eventTypes.userId, userSettings.userId))
-			.where(and(eq(userSettings.username, input.username), eq(eventTypes.slug, input.eventTypeSlug)))
+			.where(
+				and(eq(userSettings.username, input.username), eq(eventTypes.slug, input.eventTypeSlug))
+			)
 			.limit(1);
 
 		if (!row) error(404, 'Event type not found');
+
+		if (row.locationType === 'phone' && !input.clientPhone?.trim()) {
+			error(400, 'Phone number required for a phone call');
+		}
 
 		const { userId, notificationEmail, bufferMinutes, preferredLocale } = row;
 		const startTime = new Date(input.startTime);
@@ -173,6 +200,7 @@ export const createBooking = command(
 					clientName: input.clientName,
 					clientEmail: input.clientEmail,
 					clientLinkedin: input.clientLinkedin,
+					clientPhone: input.clientPhone?.trim() || null,
 					startTime,
 					endTime,
 					source: input.source ?? 'direct',
@@ -193,7 +221,9 @@ export const createBooking = command(
 						description: 'Booked via fenêtre',
 						startTime,
 						endTime,
-						attendeeEmail: input.clientEmail
+						attendeeEmail: input.clientEmail,
+						locationType: row.locationType as 'meet' | 'phone',
+						location: row.locationType === 'phone' ? phoneCallPlaceholder(locale) : undefined
 					})
 				]);
 
@@ -218,9 +248,10 @@ export const createBooking = command(
 				const companyName = fullBooking.brief?.companyName ?? '';
 				const companySiren = fullBooking.brief?.companySiren ?? undefined;
 
-				const pappers = (companyName || companySiren)
-					? await fetchPappersData(companyName, companySiren).catch(() => null)
-					: null;
+				const pappers =
+					companyName || companySiren
+						? await fetchPappersData(companyName, companySiren).catch(() => null)
+						: null;
 
 				const aiResult = await generateAiBrief(fullBooking.brief, pappers).catch(() => null);
 
@@ -283,8 +314,14 @@ export const rescheduleBooking = command(
 						eq(bookings.userId, booking.userId),
 						ne(bookings.status, 'cancelled'),
 						ne(bookings.id, booking.id),
-						gt(bookings.endTime, new Date(newStart.getTime() - (settingsRow?.bufferMinutes ?? 0) * 60_000)),
-						lt(bookings.startTime, new Date(newEnd.getTime() + (settingsRow?.bufferMinutes ?? 0) * 60_000))
+						gt(
+							bookings.endTime,
+							new Date(newStart.getTime() - (settingsRow?.bufferMinutes ?? 0) * 60_000)
+						),
+						lt(
+							bookings.startTime,
+							new Date(newEnd.getTime() + (settingsRow?.bufferMinutes ?? 0) * 60_000)
+						)
 					)
 				)
 				.limit(1);
@@ -293,7 +330,14 @@ export const rescheduleBooking = command(
 
 			await tx
 				.update(bookings)
-				.set({ startTime: newStart, endTime: newEnd, status: 'confirmed', rescheduleToken: newToken, reminderSentAt: null })
+				.set({
+					startTime: newStart,
+					endTime: newEnd,
+					status: 'confirmed',
+					rescheduleToken: newToken,
+					reminderSentAt: null,
+					phoneRevealedAt: null
+				})
 				.where(eq(bookings.id, booking.id));
 		});
 
@@ -304,7 +348,12 @@ export const rescheduleBooking = command(
 				if (booking.googleEventId) {
 					await updateCalendarEvent(booking.userId, booking.googleEventId, {
 						startTime: newStart,
-						endTime: newEnd
+						endTime: newEnd,
+						// re-hide the number until the reveal cron runs again for the new slot
+						location:
+							booking.eventType.locationType === 'phone'
+								? phoneCallPlaceholder(booking.locale as Locale)
+								: undefined
 					});
 				}
 

@@ -58,6 +58,7 @@
 	"booking.error.required_fields": "Merci de renseigner votre email et décrire votre projet.",
 	"booking.error.invalid_email": "Adresse email invalide.",
 	"booking.error.name_required": "Merci de renseigner votre prénom et nom (2 caractères minimum).",
+	"booking.error.phone_required": "Merci de renseigner votre numéro de téléphone pour l'appel.",
 	"booking.error.generic": "Une erreur est survenue, réessayez.",
 	"booking.error.slot_unavailable": "Ce créneau n'est plus disponible, choisissez-en un autre.",
 
@@ -87,6 +88,11 @@
 	"calendar.select_day": "Sélectionnez un jour pour voir les créneaux disponibles",
 	"calendar.name": "Votre prénom et nom",
 	"calendar.name.placeholder": "Alice Martin",
+	"calendar.phone": "Votre numéro de téléphone",
+	"calendar.phone.placeholder": "+33 6 12 34 56 78",
+	"calendar.phone.hint": "Vous serez appelé·e à ce numéro à l'heure du rendez-vous.",
+	"calendar.location.phone_placeholder": "Appel téléphonique — numéro communiqué 30 min avant",
+	"calendar.location.phone_revealed": "Appel téléphonique — {phone}",
 	"calendar.no_slots": "Aucun créneau disponible dans les 30 prochains jours.",
 	"calendar.no_slots.waitlist": "Rejoindre la liste d'attente",
 	"calendar.selected": "Créneau sélectionné :",
@@ -184,6 +190,9 @@
 	"admin.bookings.title": "Réservations",
 	"admin.bookings.empty": "Sélectionnez une réservation",
 	"admin.bookings.source": "Source :",
+	"admin.bookings.phone": "Téléphone :",
+	"admin.bookings.phone.pending": "Communiqué 30 min avant l'appel",
+	"admin.bookings.call": "Appeler",
 	"admin.bookings.brief.title": "Brief",
 	"admin.bookings.brief.stack": "Stack :",
 	"admin.bookings.brief.mission": "Mission :",
@@ -214,6 +223,9 @@
 	"admin.event_types.form.description": "Description",
 	"admin.event_types.form.duration": "Durée (min)",
 	"admin.event_types.form.order": "Ordre d'affichage",
+	"admin.event_types.form.location": "Lieu du rendez-vous",
+	"admin.event_types.form.location.meet": "Google Meet",
+	"admin.event_types.form.location.phone": "Appel téléphonique",
 	"admin.event_types.form.cancel": "Annuler",
 	"admin.event_types.form.save": "Enregistrer",
 	"admin.event_types.inactive": "Inactif",
@@ -340,6 +352,7 @@
 			"details": "{eventTypeName} — {durationMin} min",
 			"meet": "Rejoindre Google Meet",
 			"invite_pending": "Vous recevrez une invitation Google Calendar avec le lien de connexion.",
+			"phone_note": "Vous serez appelé·e au numéro que vous avez indiqué, à l'heure du rendez-vous.",
 			"reschedule": "Besoin de reprogrammer ?"
 		},
 		"reminder": {
@@ -364,7 +377,16 @@
 			"label_stack": "Stack",
 			"label_mission": "Mission",
 			"label_budget": "Budget",
-			"label_urgency": "Urgence"
+			"label_urgency": "Urgence",
+			"label_phone": "Téléphone",
+			"phone_pending": "Appel téléphonique — le numéro vous sera communiqué 30 min avant."
+		},
+		"phone_reveal": {
+			"subject": "Appel dans 30 min — {clientName}",
+			"title": "Votre appel approche",
+			"intro": "Vous avez un appel téléphonique avec {clientName} à {time}. Voici le numéro à composer :",
+			"call": "Appeler {clientName}",
+			"reschedule": "Besoin de reprogrammer ?"
 		}
 	}
 }

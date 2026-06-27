@@ -52,6 +52,9 @@
 	// Always-shown fields
 	let email = $state('');
 	let name = $state('');
+	let phone = $state('');
+
+	const isPhoneCall = $derived(eventType?.locationType === 'phone');
 
 	// Dynamic form values — keyed by field.key
 	function initValues(): Record<string, string> {
@@ -141,6 +144,10 @@
 			toast.error(m['booking.error.name_required']());
 			return;
 		}
+		if (isPhoneCall && !phone.trim()) {
+			toast.error(m['booking.error.phone_required']());
+			return;
+		}
 		submitting = true;
 		try {
 			const result = await createBooking({
@@ -151,6 +158,7 @@
 				clientName: name,
 				clientEmail: email,
 				clientLinkedin: values['linkedin'] || undefined,
+				clientPhone: isPhoneCall ? phone.trim() : undefined,
 				source
 			});
 			goto(
@@ -336,6 +344,18 @@
 						<FieldLabel for="name">{m['calendar.name']()}</FieldLabel>
 						<Input id="name" bind:value={name} placeholder={m['calendar.name.placeholder']()} />
 					</Field>
+					{#if isPhoneCall}
+						<Field>
+							<FieldLabel for="phone">{m['calendar.phone']()}</FieldLabel>
+							<Input
+								id="phone"
+								type="tel"
+								bind:value={phone}
+								placeholder={m['calendar.phone.placeholder']()}
+							/>
+							<p class="text-xs text-muted-foreground">{m['calendar.phone.hint']()}</p>
+						</Field>
+					{/if}
 					<Button
 						variant="ghost"
 						size="sm"

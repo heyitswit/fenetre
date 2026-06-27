@@ -40,45 +40,22 @@
 					font-size="22px"
 					font-weight="600"
 					line-height="1.3"
-					padding-bottom="24px"
+					padding-bottom="16px"
 					font-family="'Lora', Georgia, serif"
 				>
 					{{ title }}
 				</mj-text>
 
-				<!-- Event badge -->
-				<mj-text padding-bottom="8px">
-					<span
-						style="
-							display: inline-block;
-							background: #ddc8a0;
-							color: #3c2010;
-							font-size: 12px;
-							font-weight: 600;
-							padding: 4px 12px;
-							border-radius: 100px;
-							letter-spacing: 0.01em;
-						"
-					>
-						{{ eventTypeName }}
-					</span>
+				<mj-text font-size="15px" color="#7a4e30" padding-bottom="24px">
+					{{ intro }}
 				</mj-text>
 
-				<mj-text font-size="13px" color="#7a4e30" padding-bottom="24px">
-					{{ details }}
+				<mj-text font-size="26px" font-weight="600" padding-bottom="24px">
+					{{ phone }}
 				</mj-text>
 
-				<!-- Date/time -->
-				<mj-text font-size="16px" font-weight="500" padding-bottom="8px">
-					{{ date }}
-				</mj-text>
-				<mj-text font-size="15px" color="#7a4e30" padding-bottom="28px">
-					{{ time }}
-				</mj-text>
-
-				{{#if meetLink}}
 				<mj-button
-					href="{{meetLink}}"
+					href="{{telHref}}"
 					background-color="#c06428"
 					color="#faf8f4"
 					border-radius="12px"
@@ -88,17 +65,8 @@
 					padding-bottom="28px"
 					align="left"
 				>
-					{{ meetLabel }} →
+					{{ callLabel }} →
 				</mj-button>
-				{{else if phoneNote}}
-				<mj-text font-size="13px" color="#9e7e64" font-style="italic" padding-bottom="28px">
-					{{ phoneNote }}
-				</mj-text>
-				{{else}}
-				<mj-text font-size="13px" color="#9e7e64" font-style="italic" padding-bottom="28px">
-					{{ invitePending }}
-				</mj-text>
-				{{/if}}
 
 				<mj-divider border-color="#d4c8b4" border-width="1px" padding="0 0 20px 0" />
 

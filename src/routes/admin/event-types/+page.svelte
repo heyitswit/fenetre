@@ -32,6 +32,7 @@
 	let formDescription = $state('');
 	let formDuration = $state(30);
 	let formSortOrder = $state(0);
+	let formLocationType = $state<'meet' | 'phone'>('meet');
 	let formFields = $state<FormField[]>(deepCopyFields(DEFAULT_FORM_FIELDS));
 
 	// Field editor state
@@ -48,6 +49,7 @@
 		formDescription = '';
 		formDuration = 30;
 		formSortOrder = 0;
+		formLocationType = 'meet';
 		formFields = deepCopyFields(DEFAULT_FORM_FIELDS);
 		expandedField = null;
 		addingField = false;
@@ -61,6 +63,7 @@
 		formDescription = et.description ?? '';
 		formDuration = et.duration;
 		formSortOrder = et.sortOrder ?? 0;
+		formLocationType = (et.locationType as 'meet' | 'phone') ?? 'meet';
 		formFields = deepCopyFields((et.formFields as FormField[] | null) ?? DEFAULT_FORM_FIELDS);
 		expandedField = null;
 		addingField = false;
@@ -120,6 +123,7 @@
 				name: formName,
 				description: formDescription || undefined,
 				duration: formDuration,
+				locationType: formLocationType,
 				sortOrder: formSortOrder,
 				formFields
 			});
@@ -142,6 +146,7 @@
 				name: formName,
 				description: formDescription || undefined,
 				duration: formDuration,
+				locationType: formLocationType,
 				sortOrder: formSortOrder,
 				formFields
 			});
@@ -212,22 +217,36 @@
 							</Field>
 							<div class="grid grid-cols-2 gap-4">
 								<Field>
-									<FieldLabel for="f-duration"
-										>{m['admin.event_types.form.duration']()}</FieldLabel
-									>
-									<Input
-										id="f-duration"
-										type="number"
-										bind:value={formDuration}
-										min={5}
-										required
-									/>
+									<FieldLabel for="f-duration">{m['admin.event_types.form.duration']()}</FieldLabel>
+									<Input id="f-duration" type="number" bind:value={formDuration} min={5} required />
 								</Field>
 								<Field>
 									<FieldLabel for="f-order">{m['admin.event_types.form.order']()}</FieldLabel>
 									<Input id="f-order" type="number" bind:value={formSortOrder} />
 								</Field>
 							</div>
+
+							<Field>
+								<FieldLabel>{m['admin.event_types.form.location']()}</FieldLabel>
+								<div class="flex gap-2">
+									<Button
+										type="button"
+										variant={formLocationType === 'meet' ? 'default' : 'outline'}
+										size="sm"
+										onclick={() => (formLocationType = 'meet')}
+									>
+										{m['admin.event_types.form.location.meet']()}
+									</Button>
+									<Button
+										type="button"
+										variant={formLocationType === 'phone' ? 'default' : 'outline'}
+										size="sm"
+										onclick={() => (formLocationType = 'phone')}
+									>
+										{m['admin.event_types.form.location.phone']()}
+									</Button>
+								</div>
+							</Field>
 
 							<Separator />
 
@@ -376,10 +395,7 @@
 											<div class="grid grid-cols-2 gap-3">
 												<Field>
 													<FieldLabel>Label</FieldLabel>
-													<Input
-														bind:value={newFieldLabel}
-														placeholder="Ex: Taille d'équipe..."
-													/>
+													<Input bind:value={newFieldLabel} placeholder="Ex: Taille d'équipe..." />
 												</Field>
 												<Field>
 													<FieldLabel>Type</FieldLabel>

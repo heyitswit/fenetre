@@ -1,7 +1,10 @@
 import { db } from '$lib/server/db';
-import { bookings, briefs } from '$lib/server/db/schema';
+import { bookings, briefs, userSettings } from '$lib/server/db/schema';
 import { and, eq, gte, inArray, isNull, lt, lte } from 'drizzle-orm';
-import { sendReminderToClient } from '$lib/server/resend';
+import { sendReminderToClient, sendPhoneRevealToFreelance } from '$lib/server/resend';
+import { updateCalendarEvent } from '$lib/server/google';
+import { phoneCallLocation } from '$lib/server/phone-location';
+import type { Locale } from '$lib/paraglide/runtime';
 
 export async function sendReminders(): Promise<void> {
 	const tomorrowStart = new Date();
@@ -47,6 +50,58 @@ export async function markCompleted(): Promise<void> {
 		.update(bookings)
 		.set({ status: 'completed' })
 		.where(and(eq(bookings.status, 'confirmed'), lt(bookings.endTime, new Date())));
+}
+
+// Reveal the client's phone number to the freelance ~30 min before a phone call:
+// email + inject the number into the calendar event. Runs frequently (every few min).
+export async function revealPhoneNumbers(): Promise<void> {
+	const now = new Date();
+	const threshold = new Date(now.getTime() + 30 * 60 * 1000);
+
+	const upcoming = await db.query.bookings.findMany({
+		where: and(
+			eq(bookings.status, 'confirmed'),
+			isNull(bookings.phoneRevealedAt),
+			gte(bookings.startTime, now),
+			lte(bookings.startTime, threshold)
+		),
+		with: { eventType: true, brief: true }
+	});
+
+	const phoneBookings = upcoming.filter(
+		(b) => b.eventType.locationType === 'phone' && b.clientPhone
+	);
+
+	for (const booking of phoneBookings) {
+		try {
+			const [settings] = await db
+				.select({
+					notificationEmail: userSettings.notificationEmail,
+					preferredLocale: userSettings.preferredLocale
+				})
+				.from(userSettings)
+				.where(eq(userSettings.userId, booking.userId));
+
+			await sendPhoneRevealToFreelance(
+				booking,
+				settings?.notificationEmail ?? undefined,
+				settings?.preferredLocale as Locale | undefined
+			);
+
+			if (booking.googleEventId) {
+				await updateCalendarEvent(booking.userId, booking.googleEventId, {
+					location: phoneCallLocation(booking.clientPhone!, booking.locale as Locale)
+				});
+			}
+
+			await db
+				.update(bookings)
+				.set({ phoneRevealedAt: new Date() })
+				.where(eq(bookings.id, booking.id));
+		} catch (err) {
+			console.error(`Failed to reveal phone for booking ${booking.id}:`, err);
+		}
+	}
 }
 
 export async function checkAbandoned(): Promise<void> {

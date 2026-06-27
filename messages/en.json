@@ -58,6 +58,7 @@
 	"booking.error.required_fields": "Please fill in your email and describe your project.",
 	"booking.error.invalid_email": "Invalid email address.",
 	"booking.error.name_required": "Please enter your first and last name (2 characters minimum).",
+	"booking.error.phone_required": "Please enter your phone number for the call.",
 	"booking.error.generic": "Something went wrong, please try again.",
 	"booking.error.slot_unavailable": "This slot is no longer available, please choose another.",
 
@@ -87,6 +88,11 @@
 	"calendar.select_day": "Select a day to see available slots",
 	"calendar.name": "Your first and last name",
 	"calendar.name.placeholder": "Alice Martin",
+	"calendar.phone": "Your phone number",
+	"calendar.phone.placeholder": "+33 6 12 34 56 78",
+	"calendar.phone.hint": "You'll be called at this number at the time of the meeting.",
+	"calendar.location.phone_placeholder": "Phone call — number shared 30 min before",
+	"calendar.location.phone_revealed": "Phone call — {phone}",
 	"calendar.no_slots": "No slots available in the next 30 days.",
 	"calendar.no_slots.waitlist": "Join the waitlist",
 	"calendar.selected": "Selected slot:",
@@ -184,6 +190,9 @@
 	"admin.bookings.title": "Bookings",
 	"admin.bookings.empty": "Select a booking",
 	"admin.bookings.source": "Source:",
+	"admin.bookings.phone": "Phone:",
+	"admin.bookings.phone.pending": "Shared 30 min before the call",
+	"admin.bookings.call": "Call",
 	"admin.bookings.brief.title": "Brief",
 	"admin.bookings.brief.stack": "Stack:",
 	"admin.bookings.brief.mission": "Mission:",
@@ -214,6 +223,9 @@
 	"admin.event_types.form.description": "Description",
 	"admin.event_types.form.duration": "Duration (min)",
 	"admin.event_types.form.order": "Display order",
+	"admin.event_types.form.location": "Meeting location",
+	"admin.event_types.form.location.meet": "Google Meet",
+	"admin.event_types.form.location.phone": "Phone call",
 	"admin.event_types.form.cancel": "Cancel",
 	"admin.event_types.form.save": "Save",
 	"admin.event_types.inactive": "Inactive",
@@ -340,6 +352,7 @@
 			"details": "{eventTypeName} — {durationMin} min",
 			"meet": "Join Google Meet",
 			"invite_pending": "You'll receive a Google Calendar invitation with the meeting link.",
+			"phone_note": "You'll be called at the number you provided, at the time of the meeting.",
 			"reschedule": "Need to reschedule?"
 		},
 		"reminder": {
@@ -364,7 +377,16 @@
 			"label_stack": "Stack",
 			"label_mission": "Mission",
 			"label_budget": "Budget",
-			"label_urgency": "Urgency"
+			"label_urgency": "Urgency",
+			"label_phone": "Phone",
+			"phone_pending": "Phone call — the number will be shared with you 30 min before."
+		},
+		"phone_reveal": {
+			"subject": "Call in 30 min — {clientName}",
+			"title": "Your call is coming up",
+			"intro": "You have a phone call with {clientName} at {time}. Here's the number to dial:",
+			"call": "Call {clientName}",
+			"reschedule": "Need to reschedule?"
 		}
 	}
 }

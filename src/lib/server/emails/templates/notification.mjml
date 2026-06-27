@@ -182,6 +182,12 @@
 				</mj-button>
 				{{/if}}
 
+				{{#if phonePending}}
+				<mj-text font-size="13px" color="#9e7e64" font-style="italic" padding-bottom="20px">
+					{{ phonePending }}
+				</mj-text>
+				{{/if}}
+
 				{{#if brief}}
 				<mj-divider border-color="#d4c8b4" border-width="1px" padding="0 0 20px 0" />
 
