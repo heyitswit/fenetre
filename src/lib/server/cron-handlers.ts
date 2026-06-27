@@ -10,14 +10,33 @@ import {
 import { and, eq, gt, gte, inArray, isNotNull, isNull, lt, lte } from 'drizzle-orm';
 import {
 	sendReminderToClient,
-	sendSecondReminderToClient,
 	sendPhoneRevealToFreelance,
 	sendFollowupToFreelance,
-	sendRecoveryToClient
+	sendRecoveryToClient,
+	type BookingWithRelations
 } from '$lib/server/resend';
 import { updateCalendarEvent } from '$lib/server/google';
 import { phoneCallLocation } from '$lib/server/phone-location';
 import type { Locale } from '$lib/paraglide/runtime';
+
+// Send a reminder to each booking in parallel, then mark the ones that succeeded.
+async function dispatchReminders(
+	rows: BookingWithRelations[],
+	imminent: boolean,
+	markSent: (ids: string[]) => Promise<unknown>
+): Promise<void> {
+	const results = await Promise.allSettled(
+		rows.map((booking) => sendReminderToClient(booking, { imminent }))
+	);
+
+	const sentIds: string[] = [];
+	results.forEach((result, i) => {
+		if (result.status === 'fulfilled') sentIds.push(rows[i].id);
+		else console.error(`Failed to send reminder for booking ${rows[i].id}:`, result.reason);
+	});
+
+	if (sentIds.length > 0) await markSent(sentIds);
+}
 
 export async function sendReminders(): Promise<void> {
 	const tomorrowStart = new Date();
@@ -37,25 +56,9 @@ export async function sendReminders(): Promise<void> {
 		with: { eventType: true, brief: true }
 	});
 
-	const results = await Promise.allSettled(
-		upcoming.map((booking) => sendReminderToClient(booking))
+	await dispatchReminders(upcoming, false, (ids) =>
+		db.update(bookings).set({ reminderSentAt: new Date() }).where(inArray(bookings.id, ids))
 	);
-
-	const sentIds: string[] = [];
-	results.forEach((result, i) => {
-		if (result.status === 'fulfilled') {
-			sentIds.push(upcoming[i].id);
-		} else {
-			console.error(`Failed to send reminder for booking ${upcoming[i].id}:`, result.reason);
-		}
-	});
-
-	if (sentIds.length > 0) {
-		await db
-			.update(bookings)
-			.set({ reminderSentAt: new Date() })
-			.where(inArray(bookings.id, sentIds));
-	}
 }
 
 // Second reminder, ~1h before the meeting. Runs every few minutes; the 75-min window plus the
@@ -74,25 +77,9 @@ export async function sendSecondReminders(): Promise<void> {
 		with: { eventType: true, brief: true }
 	});
 
-	const results = await Promise.allSettled(
-		upcoming.map((booking) => sendSecondReminderToClient(booking))
+	await dispatchReminders(upcoming, true, (ids) =>
+		db.update(bookings).set({ secondReminderSentAt: new Date() }).where(inArray(bookings.id, ids))
 	);
-
-	const sentIds: string[] = [];
-	results.forEach((result, i) => {
-		if (result.status === 'fulfilled') {
-			sentIds.push(upcoming[i].id);
-		} else {
-			console.error(`Failed to send 1h reminder for booking ${upcoming[i].id}:`, result.reason);
-		}
-	});
-
-	if (sentIds.length > 0) {
-		await db
-			.update(bookings)
-			.set({ secondReminderSentAt: new Date() })
-			.where(inArray(bookings.id, sentIds));
-	}
 }
 
 // Email the freelance when a prospect they marked "followup" reaches its due date.
@@ -127,28 +114,30 @@ export async function sendFollowupReminders(): Promise<void> {
 			)
 		);
 
-	for (const f of due) {
-		try {
-			await sendFollowupToFreelance({
-				clientName: f.clientName,
-				clientEmail: f.clientEmail,
-				company: f.company,
-				eventTypeName: f.eventTypeName,
-				originalDate: f.startTime,
-				notes: f.notes,
-				bookingId: f.bookingId,
-				notificationEmail: f.notificationEmail ?? undefined,
-				locale: (f.preferredLocale as Locale) ?? 'fr'
-			});
+	await Promise.allSettled(
+		due.map(async (f) => {
+			try {
+				await sendFollowupToFreelance({
+					clientName: f.clientName,
+					clientEmail: f.clientEmail,
+					company: f.company,
+					eventTypeName: f.eventTypeName,
+					originalDate: f.startTime,
+					notes: f.notes,
+					bookingId: f.bookingId,
+					notificationEmail: f.notificationEmail ?? undefined,
+					locale: (f.preferredLocale as Locale) ?? 'fr'
+				});
 
-			await db
-				.update(prospectTracking)
-				.set({ followupNotifiedAt: new Date() })
-				.where(eq(prospectTracking.bookingId, f.bookingId));
-		} catch (err) {
-			console.error(`Failed to send followup reminder for booking ${f.bookingId}:`, err);
-		}
-	}
+				await db
+					.update(prospectTracking)
+					.set({ followupNotifiedAt: new Date() })
+					.where(eq(prospectTracking.bookingId, f.bookingId));
+			} catch (err) {
+				console.error(`Failed to send followup reminder for booking ${f.bookingId}:`, err);
+			}
+		})
+	);
 }
 
 // Nudge clients who started a brief but never picked a slot — once, between 1h and 48h after.
@@ -177,19 +166,21 @@ export async function recoverAbandonedBriefs(): Promise<void> {
 			)
 		);
 
-	for (const c of candidates) {
-		try {
-			await sendRecoveryToClient({
-				clientEmail: c.clientEmail,
-				username: c.username,
-				locale: (c.preferredLocale as Locale) ?? 'fr'
-			});
+	await Promise.allSettled(
+		candidates.map(async (c) => {
+			try {
+				await sendRecoveryToClient({
+					clientEmail: c.clientEmail,
+					username: c.username,
+					locale: (c.preferredLocale as Locale) ?? 'fr'
+				});
 
-			await db.update(briefs).set({ recoverySentAt: new Date() }).where(eq(briefs.id, c.briefId));
-		} catch (err) {
-			console.error(`Failed to send recovery for brief ${c.briefId}:`, err);
-		}
-	}
+				await db.update(briefs).set({ recoverySentAt: new Date() }).where(eq(briefs.id, c.briefId));
+			} catch (err) {
+				console.error(`Failed to send recovery for brief ${c.briefId}:`, err);
+			}
+		})
+	);
 }
 
 export async function markCompleted(): Promise<void> {

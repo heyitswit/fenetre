@@ -56,6 +56,36 @@
 	}
 </script>
 
+{#snippet barColumn(
+	title: string,
+	rows: typeof analytics.bySource,
+	labelFn: (key: string) => string
+)}
+	<div>
+		<p class="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+			{title}
+		</p>
+		<div class="flex flex-col gap-3">
+			{#each rows as row}
+				<div>
+					<div class="mb-1 flex items-center justify-between text-sm">
+						<span>{labelFn(row.key)}</span>
+						<span class="text-muted-foreground">
+							{m['admin.dashboard.analytics.signed_total']({
+								signed: row.signed,
+								total: row.total
+							})} · {row.rate}%
+						</span>
+					</div>
+					<div class="h-1.5 w-full rounded-full bg-muted">
+						<div class="h-1.5 rounded-full bg-primary" style="width: {row.rate}%"></div>
+					</div>
+				</div>
+			{/each}
+		</div>
+	</div>
+{/snippet}
+
 <div class="flex flex-col gap-8">
 	<div class="flex items-center justify-between">
 		<h1 class="text-2xl font-bold">{m['admin.dashboard.title']()}</h1>
@@ -110,52 +140,16 @@
 				<p class="text-sm text-muted-foreground">{m['admin.dashboard.analytics.empty']()}</p>
 			{:else}
 				<div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-					<div>
-						<p class="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-							{m['admin.dashboard.analytics.by_source']()}
-						</p>
-						<div class="flex flex-col gap-3">
-							{#each analytics.bySource as row}
-								<div>
-									<div class="mb-1 flex items-center justify-between text-sm">
-										<span>{sourceLabel(row.key)}</span>
-										<span class="text-muted-foreground">
-											{m['admin.dashboard.analytics.signed_total']({
-												signed: row.signed,
-												total: row.total
-											})} · {row.rate}%
-										</span>
-									</div>
-									<div class="h-1.5 w-full rounded-full bg-muted">
-										<div class="h-1.5 rounded-full bg-primary" style="width: {row.rate}%"></div>
-									</div>
-								</div>
-							{/each}
-						</div>
-					</div>
-					<div>
-						<p class="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-							{m['admin.dashboard.analytics.by_score']()}
-						</p>
-						<div class="flex flex-col gap-3">
-							{#each analytics.byScoreBand as row}
-								<div>
-									<div class="mb-1 flex items-center justify-between text-sm">
-										<span>{scoreBandLabel(row.key)}</span>
-										<span class="text-muted-foreground">
-											{m['admin.dashboard.analytics.signed_total']({
-												signed: row.signed,
-												total: row.total
-											})} · {row.rate}%
-										</span>
-									</div>
-									<div class="h-1.5 w-full rounded-full bg-muted">
-										<div class="h-1.5 rounded-full bg-primary" style="width: {row.rate}%"></div>
-									</div>
-								</div>
-							{/each}
-						</div>
-					</div>
+					{@render barColumn(
+						m['admin.dashboard.analytics.by_source'](),
+						analytics.bySource,
+						sourceLabel
+					)}
+					{@render barColumn(
+						m['admin.dashboard.analytics.by_score'](),
+						analytics.byScoreBand,
+						scoreBandLabel
+					)}
 				</div>
 			{/if}
 		</Card.Content>

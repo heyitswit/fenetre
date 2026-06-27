@@ -122,25 +122,11 @@ export async function sendPasswordReset(email: string, resetUrl: string): Promis
 	await resend.emails.send({ from: FROM, to: email, subject, html });
 }
 
-export async function sendReminderToClient(booking: BookingWithRelations): Promise<void> {
-	const { subject, html } = reminderEmail({
-		clientName: booking.clientName,
-		eventTypeName: booking.eventType.name,
-		startTime: booking.startTime,
-		meetLink: booking.meetLink ?? null,
-		rescheduleUrl: `${env.ORIGIN}/reschedule/${booking.rescheduleToken}`,
-		locale: booking.locale as Locale
-	});
-
-	await resend.emails.send({
-		from: FROM,
-		to: booking.clientEmail,
-		subject,
-		html
-	});
-}
-
-export async function sendSecondReminderToClient(booking: BookingWithRelations): Promise<void> {
+// imminent=true switches the copy to the "in 1h" variant (used by the second reminder cron)
+export async function sendReminderToClient(
+	booking: BookingWithRelations,
+	{ imminent = false }: { imminent?: boolean } = {}
+): Promise<void> {
 	const { subject, html } = reminderEmail({
 		clientName: booking.clientName,
 		eventTypeName: booking.eventType.name,
@@ -148,7 +134,7 @@ export async function sendSecondReminderToClient(booking: BookingWithRelations):
 		meetLink: booking.meetLink ?? null,
 		rescheduleUrl: `${env.ORIGIN}/reschedule/${booking.rescheduleToken}`,
 		locale: booking.locale as Locale,
-		imminent: true
+		imminent
 	});
 
 	await resend.emails.send({
