@@ -58,6 +58,43 @@ export async function sendReminders(): Promise<void> {
 	}
 }
 
+// Second reminder, ~1h before the meeting. Runs every few minutes; the 75-min window plus the
+// secondReminderSentAt guard make it idempotent regardless of when the tick lands.
+export async function sendSecondReminders(): Promise<void> {
+	const now = new Date();
+	const window = new Date(now.getTime() + 75 * 60 * 1000);
+
+	const upcoming = await db.query.bookings.findMany({
+		where: and(
+			eq(bookings.status, 'confirmed'),
+			isNull(bookings.secondReminderSentAt),
+			gte(bookings.startTime, now),
+			lte(bookings.startTime, window)
+		),
+		with: { eventType: true, brief: true }
+	});
+
+	const results = await Promise.allSettled(
+		upcoming.map((booking) => sendSecondReminderToClient(booking))
+	);
+
+	const sentIds: string[] = [];
+	results.forEach((result, i) => {
+		if (result.status === 'fulfilled') {
+			sentIds.push(upcoming[i].id);
+		} else {
+			console.error(`Failed to send 1h reminder for booking ${upcoming[i].id}:`, result.reason);
+		}
+	});
+
+	if (sentIds.length > 0) {
+		await db
+			.update(bookings)
+			.set({ secondReminderSentAt: new Date() })
+			.where(inArray(bookings.id, sentIds));
+	}
+}
+
 // Email the freelance when a prospect they marked "followup" reaches its due date.
 export async function sendFollowupReminders(): Promise<void> {
 	const now = new Date();
