@@ -392,7 +392,8 @@
 										value={outcomeValue}
 										onValueChange={(v: string) => {
 											outcomeValue = v;
-											saveOutcome(v);
+											// "followup" needs a date first — let the explicit Save handle it
+											if (v !== 'followup') saveOutcome(v);
 										}}
 									>
 										<Select.Trigger class="w-full">

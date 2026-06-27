@@ -123,6 +123,8 @@ export async function loadAvailableSlots(
 
 			const blocked =
 				slotStart < now ||
+				// Beyond the horizon the Google busy window wasn't fetched, so don't offer those slots
+				slotStart >= horizon ||
 				existingBookings.some((b) => {
 					const bufStart = new Date(b.startTime.getTime() - bufferMinutes * 60_000);
 					const bufEnd = new Date(b.endTime.getTime() + bufferMinutes * 60_000);
@@ -138,7 +140,7 @@ export async function loadAvailableSlots(
 				slots[dateKey].push({ start: slotStart.toISOString(), end: slotEnd.toISOString() });
 			}
 
-			cursor.setMinutes(cursor.getMinutes() + row.duration);
+			cursor.setTime(cursor.getTime() + row.duration * 60_000);
 		}
 
 		if (slots[dateKey].length === 0) delete slots[dateKey];

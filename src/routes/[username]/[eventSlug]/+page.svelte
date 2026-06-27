@@ -118,6 +118,7 @@
 			}
 
 			const result = await saveBrief({
+				briefId: briefId ?? undefined,
 				username,
 				clientEmail: email,
 				companyName: values['companyName'] || undefined,

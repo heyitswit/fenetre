@@ -21,7 +21,7 @@ import { bookingLimiter, formLimiter } from '$lib/server/limiter';
 import { requireAuth } from '$lib/server/remote-helpers';
 import { getLocale, type Locale } from '$lib/paraglide/runtime';
 import { error } from '@sveltejs/kit';
-import { and, count, desc, eq, getTableColumns, gt, gte, lt, ne } from 'drizzle-orm';
+import { and, count, desc, eq, getTableColumns, gt, gte, isNull, lt, ne } from 'drizzle-orm';
 import * as z from 'zod';
 
 const PHONE_REVEAL_WINDOW_MS = 30 * 60 * 1000;
@@ -185,6 +185,7 @@ export const getBookingById = query(z.object({ id: z.string().uuid() }), async (
 
 export const saveBrief = command(
 	z.object({
+		briefId: z.string().uuid().optional(),
 		username: z.string(),
 		clientEmail: z.email(),
 		companyName: z.string().optional(),
@@ -196,17 +197,27 @@ export const saveBrief = command(
 		customFields: z.record(z.string(), z.string()).optional(),
 		companySiren: z.string().optional()
 	}),
-	async ({ username, ...input }) => {
+	async ({ briefId, username, ...input }) => {
 		if (await formLimiter.isLimited(getRequestEvent())) error(429, 'Too many requests');
 		const [owner] = await db
 			.select({ userId: userSettings.userId })
 			.from(userSettings)
 			.where(eq(userSettings.username, username))
 			.limit(1);
-		const [brief] = await db
-			.insert(briefs)
-			.values({ ...input, userId: owner?.userId ?? null })
-			.returning();
+		const values = { ...input, userId: owner?.userId ?? null };
+
+		// Reuse the same row when the client edits and resubmits (e.g. via the back button),
+		// otherwise stale orphan briefs would later trigger bogus recovery emails.
+		if (briefId) {
+			const [updated] = await db
+				.update(briefs)
+				.set(values)
+				.where(and(eq(briefs.id, briefId), isNull(briefs.bookingId)))
+				.returning({ id: briefs.id });
+			if (updated) return { briefId: updated.id };
+		}
+
+		const [brief] = await db.insert(briefs).values(values).returning({ id: briefs.id });
 		return { briefId: brief.id };
 	}
 );
@@ -471,9 +482,24 @@ export const updateBookingOutcome = command(
 		});
 		if (!booking) error(404, 'Booking not found');
 
-		// Only "followup" carries a date; reset the notified flag so the cron re-arms on a new date
+		// Only "followup" carries a date
 		const followupDate =
 			input.outcome === 'followup' && input.followupDate ? new Date(input.followupDate) : null;
+
+		// Re-arm the follow-up cron only when the date actually changes — otherwise re-saving an
+		// already-notified booking (e.g. editing the notes) would send a duplicate reminder.
+		const [existing] = await db
+			.select({
+				followupDate: prospectTracking.followupDate,
+				followupNotifiedAt: prospectTracking.followupNotifiedAt
+			})
+			.from(prospectTracking)
+			.where(eq(prospectTracking.bookingId, booking.id))
+			.limit(1);
+
+		const dateChanged =
+			(existing?.followupDate?.getTime() ?? null) !== (followupDate?.getTime() ?? null);
+		const followupNotifiedAt = dateChanged ? null : (existing?.followupNotifiedAt ?? null);
 
 		await db
 			.insert(prospectTracking)
@@ -482,7 +508,7 @@ export const updateBookingOutcome = command(
 				outcome: input.outcome,
 				notes: input.notes,
 				followupDate,
-				followupNotifiedAt: null
+				followupNotifiedAt
 			})
 			.onConflictDoUpdate({
 				target: prospectTracking.bookingId,
@@ -490,7 +516,7 @@ export const updateBookingOutcome = command(
 					outcome: input.outcome,
 					notes: input.notes,
 					followupDate,
-					followupNotifiedAt: null,
+					followupNotifiedAt,
 					updatedAt: new Date()
 				}
 			});
@@ -504,6 +530,7 @@ export const updateBookingOutcome = command(
 		}
 
 		void getAllBookings().refresh();
+		void getBookingById({ id: booking.id }).refresh();
 		return { ok: true };
 	}
 );
