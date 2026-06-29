@@ -6,7 +6,7 @@
       "idx": 0,
       "version": "7",
       "when": 1775735353081,
-      "tag": "0000_fearless_loa",
+      "tag": "0000_init_schema",
       "breakpoints": true
     },
     {
@@ -20,21 +20,21 @@
       "idx": 2,
       "version": "7",
       "when": 1781533163983,
-      "tag": "0002_pretty_expediter",
+      "tag": "0002_custom_fields_locale_indexes",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "7",
       "when": 1782554638701,
-      "tag": "0003_dashing_namora",
+      "tag": "0003_phone_and_location_type",
       "breakpoints": true
     },
     {
       "idx": 4,
       "version": "7",
       "when": 1782573488522,
-      "tag": "0004_certain_yellow_claw",
+      "tag": "0004_reminders_recovery_timezone",
       "breakpoints": true
     }
   ]

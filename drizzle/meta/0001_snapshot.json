@@ -1,6 +1,6 @@
 {
-  "id": "e599cf63-214f-4ef2-bfc6-8f2f6db00a22",
-  "prevId": "d3e074af-557c-46f8-854d-83c5bd2be881",
+  "id": "d3e074af-557c-46f8-854d-83c5bd2be881",
+  "prevId": "115d48ef-fff8-40b3-88b6-70a23b6025a2",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -47,23 +47,7 @@
           "default": true
         }
       },
-      "indexes": {
-        "availability_userId_idx": {
-          "name": "availability_userId_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "availability_user_id_user_id_fk": {
           "name": "availability_user_id_user_id_fk",
@@ -190,77 +174,7 @@
           "default": "now()"
         }
       },
-      "indexes": {
-        "bookings_userId_status_startTime_idx": {
-          "name": "bookings_userId_status_startTime_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "start_time",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "bookings_status_startTime_idx": {
-          "name": "bookings_status_startTime_idx",
-          "columns": [
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "start_time",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "bookings_status_endTime_idx": {
-          "name": "bookings_status_endTime_idx",
-          "columns": [
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "end_time",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "bookings_user_id_user_id_fk": {
           "name": "bookings_user_id_user_id_fk",
@@ -362,18 +276,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "custom_fields": {
-          "name": "custom_fields",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "company_siren": {
-          "name": "company_siren",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "is_abandoned": {
           "name": "is_abandoned",
           "type": "boolean",
@@ -389,44 +291,7 @@
           "default": "now()"
         }
       },
-      "indexes": {
-        "briefs_bookingId_idx": {
-          "name": "briefs_bookingId_idx",
-          "columns": [
-            {
-              "expression": "booking_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "briefs_isAbandoned_createdAt_idx": {
-          "name": "briefs_isAbandoned_createdAt_idx",
-          "columns": [
-            {
-              "expression": "is_abandoned",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "briefs_booking_id_bookings_id_fk": {
           "name": "briefs_booking_id_bookings_id_fk",
@@ -517,12 +382,6 @@
           "notNull": false,
           "default": 0
         },
-        "form_fields": {
-          "name": "form_fields",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -531,29 +390,7 @@
           "default": "now()"
         }
       },
-      "indexes": {
-        "event_types_userId_isActive_idx": {
-          "name": "event_types_userId_isActive_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "is_active",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "event_types_user_id_user_id_fk": {
           "name": "event_types_user_id_user_id_fk",
@@ -609,12 +446,6 @@
         },
         "company_domain": {
           "name": "company_domain",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "company_siren": {
-          "name": "company_siren",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -675,23 +506,7 @@
           "default": "now()"
         }
       },
-      "indexes": {
-        "prospect_insights_bookingId_idx": {
-          "name": "prospect_insights_bookingId_idx",
-          "columns": [
-            {
-              "expression": "booking_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "prospect_insights_booking_id_bookings_id_fk": {
           "name": "prospect_insights_booking_id_bookings_id_fk",
@@ -821,13 +636,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "preferred_locale": {
-          "name": "preferred_locale",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'fr'"
-        },
         "google_refresh_token": {
           "name": "google_refresh_token",
           "type": "text",
@@ -915,23 +723,7 @@
           "default": "now()"
         }
       },
-      "indexes": {
-        "waitlist_eventTypeId_idx": {
-          "name": "waitlist_eventTypeId_idx",
-          "columns": [
-            {
-              "expression": "event_type_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "waitlist_event_type_id_event_types_id_fk": {
           "name": "waitlist_event_type_id_event_types_id_fk",
