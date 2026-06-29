@@ -19,7 +19,7 @@
 				<span class="text-sm font-semibold tracking-tight">Fenêtre</span>
 			</div>
 			<h1 class="mt-4 text-3xl font-bold">Terms of Service</h1>
-			<p class="mt-1 text-sm text-muted-foreground">Last updated: April 11, 2025</p>
+			<p class="mt-1 text-sm text-muted-foreground">Last updated: June 29, 2026</p>
 		</div>
 
 		<div
