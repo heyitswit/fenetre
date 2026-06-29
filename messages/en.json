@@ -186,6 +186,16 @@
 	"admin.dashboard.busy_mode.error": "Error updating busy mode",
 	"admin.dashboard.view": "View",
 	"admin.dashboard.today_badge": "Today",
+	"admin.dashboard.analytics.title": "Conversion",
+	"admin.dashboard.analytics.subtitle": "Signed rate by source and by AI score",
+	"admin.dashboard.analytics.empty": "Not enough data yet.",
+	"admin.dashboard.analytics.by_source": "By source",
+	"admin.dashboard.analytics.by_score": "By compatibility score",
+	"admin.dashboard.analytics.signed_total": "{signed}/{total} signed",
+	"admin.dashboard.analytics.score.high": "High (80+)",
+	"admin.dashboard.analytics.score.mid": "Mid (50–79)",
+	"admin.dashboard.analytics.score.low": "Low (<50)",
+	"admin.dashboard.analytics.score.unscored": "Unscored",
 
 	"admin.bookings.title": "Bookings",
 	"admin.bookings.empty": "Select a booking",
@@ -202,6 +212,7 @@
 	"admin.bookings.insights.score": "Score: {score}/100",
 	"admin.bookings.tracking.title": "Tracking",
 	"admin.bookings.tracking.outcome": "Outcome",
+	"admin.bookings.tracking.followup_date": "Follow-up date",
 	"admin.bookings.tracking.notes": "Internal notes",
 	"admin.bookings.tracking.notes.placeholder": "Notes...",
 	"admin.bookings.tracking.save": "Save",
@@ -273,6 +284,8 @@
 	"admin.settings.locale.description": "Notifications you receive will be in this language, regardless of the client's.",
 	"admin.settings.buffer.title": "Buffer between appointments (min)",
 	"admin.settings.buffer.description": "Protected time before and after each appointment.",
+	"admin.settings.timezone.title": "Timezone",
+	"admin.settings.timezone.description": "Your availability hours are interpreted in this timezone.",
 	"admin.settings.portfolio.title": "Portfolio links",
 	"admin.settings.portfolio.description": "Shown on the confirmation page after booking, filterable by mission type.",
 	"admin.settings.portfolio.add": "Add a link",
@@ -362,6 +375,26 @@
 			"context": "If your context has changed since you booked, feel free to reply to this email — it'll help me come even better prepared.",
 			"see_you": "See you tomorrow!",
 			"reschedule": "Need to reschedule?"
+		},
+		"reminder_soon": {
+			"subject": "It's in 1h — our {eventTypeName}",
+			"body": "We're meeting in an hour, at {time}, for our {eventTypeName}.",
+			"see_you": "See you shortly!"
+		},
+		"followup": {
+			"subject": "Follow-up due — {clientName}",
+			"title": "Follow-up scheduled for today",
+			"intro": "You planned to follow up with {clientName} ({company}) today.",
+			"original_label": "Initial call",
+			"original_value": "{eventTypeName} · {date}",
+			"notes_label": "Your notes",
+			"cta": "View prospect"
+		},
+		"recovery": {
+			"subject": "You started a booking",
+			"title": "You were almost there!",
+			"body": "You started booking a call but didn't finish. Pick it back up whenever you like — it only takes a minute.",
+			"cta": "Resume my booking"
 		},
 		"notification": {
 			"subject": "New booking — {clientName} ({eventTypeName})",

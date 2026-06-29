@@ -186,6 +186,16 @@
 	"admin.dashboard.busy_mode.error": "Erreur lors de la mise à jour",
 	"admin.dashboard.view": "Voir",
 	"admin.dashboard.today_badge": "Aujourd'hui",
+	"admin.dashboard.analytics.title": "Conversion",
+	"admin.dashboard.analytics.subtitle": "Taux de signature par source et par score IA",
+	"admin.dashboard.analytics.empty": "Pas encore assez de données.",
+	"admin.dashboard.analytics.by_source": "Par source",
+	"admin.dashboard.analytics.by_score": "Par score de compatibilité",
+	"admin.dashboard.analytics.signed_total": "{signed}/{total} signés",
+	"admin.dashboard.analytics.score.high": "Élevé (80+)",
+	"admin.dashboard.analytics.score.mid": "Moyen (50–79)",
+	"admin.dashboard.analytics.score.low": "Faible (<50)",
+	"admin.dashboard.analytics.score.unscored": "Sans score",
 
 	"admin.bookings.title": "Réservations",
 	"admin.bookings.empty": "Sélectionnez une réservation",
@@ -202,6 +212,7 @@
 	"admin.bookings.insights.score": "Score : {score}/100",
 	"admin.bookings.tracking.title": "Suivi",
 	"admin.bookings.tracking.outcome": "Résultat",
+	"admin.bookings.tracking.followup_date": "Date de relance",
 	"admin.bookings.tracking.notes": "Notes internes",
 	"admin.bookings.tracking.notes.placeholder": "Notes...",
 	"admin.bookings.tracking.save": "Sauvegarder",
@@ -273,6 +284,8 @@
 	"admin.settings.locale.description": "Les notifications que vous recevez seront dans cette langue, indépendamment de celle du client.",
 	"admin.settings.buffer.title": "Buffer entre les RDV (min)",
 	"admin.settings.buffer.description": "Temps protégé avant et après chaque rendez-vous.",
+	"admin.settings.timezone.title": "Fuseau horaire",
+	"admin.settings.timezone.description": "Vos heures de disponibilité sont interprétées dans ce fuseau.",
 	"admin.settings.portfolio.title": "Liens portfolio",
 	"admin.settings.portfolio.description": "Affichés sur la page de confirmation après réservation, filtrables par type de mission.",
 	"admin.settings.portfolio.add": "Ajouter un lien",
@@ -362,6 +375,26 @@
 			"context": "Si votre contexte a changé depuis votre réservation, n'hésitez pas à me le glisser en réponse à cet email — ça me permettra d'arriver encore mieux préparée.",
 			"see_you": "À demain !",
 			"reschedule": "Besoin de reprogrammer ?"
+		},
+		"reminder_soon": {
+			"subject": "C'est dans 1h — notre {eventTypeName}",
+			"body": "On se retrouve dans une heure, à {time}, pour notre {eventTypeName}.",
+			"see_you": "À tout de suite !"
+		},
+		"followup": {
+			"subject": "Relance à faire — {clientName}",
+			"title": "Relance prévue aujourd'hui",
+			"intro": "Tu avais prévu de relancer {clientName} ({company}) aujourd'hui.",
+			"original_label": "Échange initial",
+			"original_value": "{eventTypeName} · {date}",
+			"notes_label": "Tes notes",
+			"cta": "Voir le prospect"
+		},
+		"recovery": {
+			"subject": "Vous avez commencé une réservation",
+			"title": "Vous y étiez presque !",
+			"body": "Vous avez commencé à réserver un appel mais ne l'avez pas finalisé. Reprenez quand vous voulez, ça ne prend qu'une minute.",
+			"cta": "Reprendre ma réservation"
 		},
 		"notification": {
 			"subject": "Nouvelle réservation — {clientName} ({eventTypeName})",

@@ -5,6 +5,7 @@ import {
 	briefs,
 	eventTypes,
 	prospectInsights,
+	prospectTracking,
 	userSettings
 } from '$lib/server/db/schema';
 import { loadBookingConfirmation, loadBookingByToken } from '$lib/server/public-queries';
@@ -20,7 +21,7 @@ import { bookingLimiter, formLimiter } from '$lib/server/limiter';
 import { requireAuth } from '$lib/server/remote-helpers';
 import { getLocale, type Locale } from '$lib/paraglide/runtime';
 import { error } from '@sveltejs/kit';
-import { and, count, desc, eq, getTableColumns, gt, gte, lt, ne } from 'drizzle-orm';
+import { and, count, desc, eq, getTableColumns, gt, gte, isNull, lt, ne } from 'drizzle-orm';
 import * as z from 'zod';
 
 const PHONE_REVEAL_WINDOW_MS = 30 * 60 * 1000;
@@ -88,6 +89,72 @@ export const getDashboardStats = query(async () => {
 	};
 });
 
+type ConversionRow = { total: number; signed: number };
+function emptyRow(): ConversionRow {
+	return { total: 0, signed: 0 };
+}
+
+// Closes the loop the AI score opens: which sources and which score bands actually sign.
+export const getConversionAnalytics = query(async () => {
+	const user = requireAuth();
+	const rows = await db
+		.select({
+			source: bookings.source,
+			outcome: prospectTracking.outcome,
+			score: prospectInsights.compatibilityScore
+		})
+		.from(bookings)
+		.leftJoin(prospectTracking, eq(prospectTracking.bookingId, bookings.id))
+		.leftJoin(prospectInsights, eq(prospectInsights.bookingId, bookings.id))
+		.where(eq(bookings.userId, user.id));
+
+	const totals = { total: 0, signed: 0, declined: 0, ghost: 0, followup: 0, pending: 0 };
+	const bySource = new Map<string, ConversionRow>();
+	const byScoreBand = new Map<string, ConversionRow>();
+
+	const scoreBand = (score: number | null): string => {
+		if (score === null) return 'unscored';
+		if (score >= 80) return 'high';
+		if (score >= 50) return 'mid';
+		return 'low';
+	};
+
+	for (const r of rows) {
+		const outcome = r.outcome ?? 'pending';
+		const signed = outcome === 'signed' ? 1 : 0;
+
+		totals.total++;
+		if (outcome in totals) (totals as Record<string, number>)[outcome]++;
+
+		const src = r.source ?? 'direct';
+		const sRow = bySource.get(src) ?? emptyRow();
+		sRow.total++;
+		sRow.signed += signed;
+		bySource.set(src, sRow);
+
+		const band = scoreBand(r.score);
+		const bRow = byScoreBand.get(band) ?? emptyRow();
+		bRow.total++;
+		bRow.signed += signed;
+		byScoreBand.set(band, bRow);
+	}
+
+	const withRate = (m: Map<string, ConversionRow>) =>
+		[...m.entries()]
+			.map(([key, v]) => ({
+				key,
+				...v,
+				rate: v.total ? Math.round((v.signed / v.total) * 100) : 0
+			}))
+			.sort((a, b) => b.total - a.total);
+
+	return {
+		totals,
+		bySource: withRate(bySource),
+		byScoreBand: withRate(byScoreBand)
+	};
+});
+
 export const getAllBookings = query(async () => {
 	const user = requireAuth();
 	const rows = await db.query.bookings.findMany({
@@ -118,6 +185,8 @@ export const getBookingById = query(z.object({ id: z.string().uuid() }), async (
 
 export const saveBrief = command(
 	z.object({
+		briefId: z.string().uuid().optional(),
+		username: z.string(),
 		clientEmail: z.email(),
 		companyName: z.string().optional(),
 		projectDescription: z.string().optional(),
@@ -128,9 +197,27 @@ export const saveBrief = command(
 		customFields: z.record(z.string(), z.string()).optional(),
 		companySiren: z.string().optional()
 	}),
-	async (input) => {
+	async ({ briefId, username, ...input }) => {
 		if (await formLimiter.isLimited(getRequestEvent())) error(429, 'Too many requests');
-		const [brief] = await db.insert(briefs).values(input).returning();
+		const [owner] = await db
+			.select({ userId: userSettings.userId })
+			.from(userSettings)
+			.where(eq(userSettings.username, username))
+			.limit(1);
+		const values = { ...input, userId: owner?.userId ?? null };
+
+		// Reuse the same row when the client edits and resubmits (e.g. via the back button),
+		// otherwise stale orphan briefs would later trigger bogus recovery emails.
+		if (briefId) {
+			const [updated] = await db
+				.update(briefs)
+				.set(values)
+				.where(and(eq(briefs.id, briefId), isNull(briefs.bookingId)))
+				.returning({ id: briefs.id });
+			if (updated) return { briefId: updated.id };
+		}
+
+		const [brief] = await db.insert(briefs).values(values).returning({ id: briefs.id });
 		return { briefId: brief.id };
 	}
 );
@@ -380,7 +467,12 @@ const OUTCOME_STATUS: Record<string, 'cancelled' | 'completed' | null> = {
 };
 
 export const updateBookingOutcome = command(
-	z.object({ bookingId: z.string().uuid(), outcome: z.string(), notes: z.string().optional() }),
+	z.object({
+		bookingId: z.string().uuid(),
+		outcome: z.string(),
+		notes: z.string().optional(),
+		followupDate: z.string().optional()
+	}),
 	async (input) => {
 		const user = requireAuth();
 		const { prospectTracking } = await import('$lib/server/db/schema');
@@ -390,12 +482,43 @@ export const updateBookingOutcome = command(
 		});
 		if (!booking) error(404, 'Booking not found');
 
+		// Only "followup" carries a date
+		const followupDate =
+			input.outcome === 'followup' && input.followupDate ? new Date(input.followupDate) : null;
+
+		// Re-arm the follow-up cron only when the date actually changes — otherwise re-saving an
+		// already-notified booking (e.g. editing the notes) would send a duplicate reminder.
+		const [existing] = await db
+			.select({
+				followupDate: prospectTracking.followupDate,
+				followupNotifiedAt: prospectTracking.followupNotifiedAt
+			})
+			.from(prospectTracking)
+			.where(eq(prospectTracking.bookingId, booking.id))
+			.limit(1);
+
+		const dateChanged =
+			(existing?.followupDate?.getTime() ?? null) !== (followupDate?.getTime() ?? null);
+		const followupNotifiedAt = dateChanged ? null : (existing?.followupNotifiedAt ?? null);
+
 		await db
 			.insert(prospectTracking)
-			.values({ bookingId: booking.id, outcome: input.outcome, notes: input.notes })
+			.values({
+				bookingId: booking.id,
+				outcome: input.outcome,
+				notes: input.notes,
+				followupDate,
+				followupNotifiedAt
+			})
 			.onConflictDoUpdate({
 				target: prospectTracking.bookingId,
-				set: { outcome: input.outcome, notes: input.notes, updatedAt: new Date() }
+				set: {
+					outcome: input.outcome,
+					notes: input.notes,
+					followupDate,
+					followupNotifiedAt,
+					updatedAt: new Date()
+				}
 			});
 
 		const newStatus = OUTCOME_STATUS[input.outcome] ?? null;
@@ -407,6 +530,7 @@ export const updateBookingOutcome = command(
 		}
 
 		void getAllBookings().refresh();
+		void getBookingById({ id: booking.id }).refresh();
 		return { ok: true };
 	}
 );

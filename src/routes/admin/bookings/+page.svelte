@@ -5,6 +5,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Field, FieldGroup, FieldLabel } from '$lib/components/ui/field/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Spinner } from '$lib/components/ui/spinner/index.js';
@@ -28,11 +29,17 @@
 	let filterStatus = $state('all');
 	let filterSource = $state('all');
 	let outcomeNotes = $state('');
+	let outcomeValue = $state('pending');
+	let outcomeFollowupDate = $state('');
 	let savingOutcome = $state(false);
 
 	$effect(() => {
 		if (!selected) return;
 		outcomeNotes = selected.tracking?.notes ?? '';
+		outcomeValue = selected.tracking?.outcome ?? 'pending';
+		outcomeFollowupDate = selected.tracking?.followupDate
+			? new Date(selected.tracking.followupDate).toISOString().slice(0, 10)
+			: '';
 	});
 
 	// Mirror the delayed-reveal: number stays hidden until the reveal cron runs (~30 min before)
@@ -113,7 +120,13 @@
 		if (!selected) return;
 		savingOutcome = true;
 		try {
-			await updateBookingOutcome({ bookingId: selected.id, outcome, notes: outcomeNotes });
+			await updateBookingOutcome({
+				bookingId: selected.id,
+				outcome,
+				notes: outcomeNotes,
+				followupDate:
+					outcome === 'followup' && outcomeFollowupDate ? outcomeFollowupDate : undefined
+			});
 			toast.success(m['admin.bookings.tracking.saved']());
 		} catch {
 			toast.error(m['admin.bookings.tracking.error']());
@@ -374,14 +387,17 @@
 							<FieldGroup>
 								<Field>
 									<FieldLabel>{m['admin.bookings.tracking.outcome']()}</FieldLabel>
-									{@const currentOutcome = selected.tracking?.outcome ?? 'pending'}
 									<Select.Root
 										type="single"
-										value={currentOutcome}
-										onValueChange={(v: string) => saveOutcome(v)}
+										value={outcomeValue}
+										onValueChange={(v: string) => {
+											outcomeValue = v;
+											// "followup" needs a date first — let the explicit Save handle it
+											if (v !== 'followup') saveOutcome(v);
+										}}
 									>
 										<Select.Trigger class="w-full">
-											{outcomeLabel(currentOutcome)}
+											{outcomeLabel(outcomeValue)}
 										</Select.Trigger>
 										<Select.Content>
 											{#each OUTCOMES as opt}
@@ -390,6 +406,12 @@
 										</Select.Content>
 									</Select.Root>
 								</Field>
+								{#if outcomeValue === 'followup'}
+									<Field>
+										<FieldLabel>{m['admin.bookings.tracking.followup_date']()}</FieldLabel>
+										<Input type="date" bind:value={outcomeFollowupDate} />
+									</Field>
+								{/if}
 								<Field>
 									<FieldLabel>{m['admin.bookings.tracking.notes']()}</FieldLabel>
 									<Textarea
@@ -399,7 +421,7 @@
 									/>
 								</Field>
 								<Button
-									onclick={() => saveOutcome(selected.tracking?.outcome ?? 'pending')}
+									onclick={() => saveOutcome(outcomeValue)}
 									disabled={savingOutcome}
 									class="w-full"
 								>

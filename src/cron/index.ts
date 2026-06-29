@@ -28,6 +28,16 @@ cron.schedule('0 8 * * *', () => {
 	callEndpoint('/api/cron/send-reminders');
 });
 
+// 1h reminders — every 10 min (the handler's window + sent flag keep it idempotent)
+cron.schedule('*/10 * * * *', () => {
+	callEndpoint('/api/cron/send-second-reminders');
+});
+
+// Due follow-up reminders to the freelance — daily at 09:00
+cron.schedule('0 9 * * *', () => {
+	callEndpoint('/api/cron/send-followups');
+});
+
 // Reveal client phone numbers ~30 min before phone calls — every 5 min
 cron.schedule('*/5 * * * *', () => {
 	callEndpoint('/api/cron/reveal-phone');

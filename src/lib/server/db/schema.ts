@@ -37,6 +37,8 @@ export const userSettings = pgTable('user_settings', {
 	username: text('username').notNull().unique(), // public URL slug: /[username]/[eventSlug]
 	notificationEmail: text('notification_email'),
 	bufferMinutes: integer('buffer_minutes').notNull().default(15),
+	// IANA timezone used to interpret availability hours when computing public slots
+	timezone: text('timezone').notNull().default('Europe/Paris'),
 	portfolioLinks: jsonb('portfolio_links').$type<PortfolioLink[]>(),
 	preferredLocale: text('preferred_locale').notNull().default('fr'),
 	googleRefreshToken: text('google_refresh_token'),
@@ -106,6 +108,8 @@ export const bookings = pgTable(
 		rescheduleToken: text('reschedule_token').unique(),
 		locale: text('locale').notNull().default('fr'),
 		reminderSentAt: timestamp('reminder_sent_at'),
+		// Second reminder, sent ~1h before the meeting (distinct from the 24h reminderSentAt)
+		secondReminderSentAt: timestamp('second_reminder_sent_at'),
 		// Set once the client's phone number has been revealed to the freelance (~30 min before a phone call)
 		phoneRevealedAt: timestamp('phone_revealed_at'),
 		createdAt: timestamp('created_at').defaultNow().notNull()
@@ -125,6 +129,8 @@ export const briefs = pgTable(
 	{
 		id: uuid('id').defaultRandom().primaryKey(),
 		bookingId: uuid('booking_id').references(() => bookings.id),
+		// The freelance the brief targets — lets the recovery cron route abandoned briefs
+		userId: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
 		clientEmail: text('client_email').notNull(),
 		companyName: text('company_name'),
 		projectDescription: text('project_description'),
@@ -135,6 +141,8 @@ export const briefs = pgTable(
 		customFields: jsonb('custom_fields').$type<Record<string, string> | null>(),
 		companySiren: text('company_siren'),
 		isAbandoned: boolean('is_abandoned').default(false).notNull(),
+		// Set once the "you left a booking unfinished" recovery email has been sent to the client
+		recoverySentAt: timestamp('recovery_sent_at'),
 		createdAt: timestamp('created_at').defaultNow().notNull()
 	},
 	(t) => [
@@ -176,6 +184,8 @@ export const prospectTracking = pgTable('prospect_tracking', {
 	outcome: text('outcome'), // signed | declined | followup | ghost | pending
 	notes: text('notes'),
 	followupDate: timestamp('followup_date'),
+	// Set once the freelance has been emailed that this follow-up is due
+	followupNotifiedAt: timestamp('followup_notified_at'),
 	updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 

@@ -5,6 +5,7 @@ import { userSettings } from '$lib/server/db/schema';
 import { requireAuth } from '$lib/server/remote-helpers';
 import { invalidateForUser } from '$lib/server/event-types-cache';
 import { locales } from '$lib/paraglide/runtime';
+import { isValidTimezone } from '$lib/timezones';
 import { loadPublicPortfolioLinks } from '$lib/server/public-queries';
 import { eq } from 'drizzle-orm';
 import * as z from 'zod';
@@ -12,6 +13,7 @@ import * as z from 'zod';
 const DEFAULTS = {
 	notificationEmail: null,
 	bufferMinutes: 15,
+	timezone: 'Europe/Paris',
 	preferredLocale: 'fr',
 	portfolioLinks: [] as PortfolioLink[],
 	googleRefreshToken: null,
@@ -60,6 +62,7 @@ export const updateSettings = command(
 			.optional(),
 		notificationEmail: z.string().email().nullable().optional(),
 		bufferMinutes: z.number().int().min(0).max(120).optional(),
+		timezone: z.string().refine(isValidTimezone, { message: 'Unsupported timezone' }).optional(),
 		preferredLocale: z.enum(locales).optional(),
 		portfolioLinks: z.array(PortfolioLinkSchema).max(20).optional()
 	}),
